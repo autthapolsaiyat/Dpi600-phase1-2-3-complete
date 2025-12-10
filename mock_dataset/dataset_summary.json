@@ -1,0 +1,73 @@
+{
+  "name": "DPI-600 Mock Drug Profile Dataset",
+  "version": "1.0",
+  "created_at": "2025-12-10T09:35:06.102777",
+  "total_images": 1000,
+  "splits": {
+    "train": 810,
+    "val": 102,
+    "test": 88
+  },
+  "classes": {
+    "lion": {
+      "name_th": "สิงโต",
+      "name_en": "Lion",
+      "count": 250,
+      "percentage": "25.0%"
+    },
+    "wy": {
+      "name_th": "WY",
+      "name_en": "WY",
+      "count": 200,
+      "percentage": "20.0%"
+    },
+    "999": {
+      "name_th": "999",
+      "name_en": "999",
+      "count": 150,
+      "percentage": "15.0%"
+    },
+    "horse": {
+      "name_th": "ม้า",
+      "name_en": "Horse",
+      "count": 80,
+      "percentage": "8.0%"
+    },
+    "r_mark": {
+      "name_th": "R",
+      "name_en": "R Mark",
+      "count": 50,
+      "percentage": "5.0%"
+    },
+    "star": {
+      "name_th": "ดาว",
+      "name_en": "Star",
+      "count": 50,
+      "percentage": "5.0%"
+    },
+    "eagle": {
+      "name_th": "นกอินทรี",
+      "name_en": "Eagle",
+      "count": 50,
+      "percentage": "5.0%"
+    },
+    "no_logo": {
+      "name_th": "ไม่มีโลโก้",
+      "name_en": "No Logo",
+      "count": 70,
+      "percentage": "7.0%"
+    },
+    "ice": {
+      "name_th": "ไอซ์",
+      "name_en": "Ice/Crystal",
+      "count": 80,
+      "percentage": "8.0%"
+    },
+    "heroin": {
+      "name_th": "เฮโรอีน",
+      "name_en": "Heroin",
+      "count": 20,
+      "percentage": "2.0%"
+    }
+  }
+}

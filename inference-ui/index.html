@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DPI-600 Drug Logo Recognition</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a0a1a 0%, #1a1a3a 50%, #0a1628 100%);
+            min-height: 100vh;
+            color: #e0e0e0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            padding: 30px 0;
+            border-bottom: 1px solid rgba(0, 255, 255, 0.2);
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(90deg, #00ffff, #ff00ff, #00ffff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 30px rgba(0, 255, 255, 0.5);
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #888;
+            font-size: 1.1rem;
+        }
+
+        /* Main Layout */
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Card Style */
+        .card {
+            background: rgba(20, 20, 40, 0.8);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        .card h2 {
+            color: #00ffff;
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Upload Area */
+        .upload-area {
+            border: 2px dashed rgba(0, 255, 255, 0.5);
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(0, 255, 255, 0.05);
+        }
+
+        .upload-area:hover {
+            border-color: #00ffff;
+            background: rgba(0, 255, 255, 0.1);
+            transform: scale(1.02);
+        }
+
+        .upload-area.dragover {
+            border-color: #ff00ff;
+            background: rgba(255, 0, 255, 0.1);
+        }
+
+        .upload-icon {
+            font-size: 4rem;
+            margin-bottom: 15px;
+        }
+
+        .upload-text {
+            font-size: 1.1rem;
+            color: #aaa;
+        }
+
+        .upload-text span {
+            color: #00ffff;
+            text-decoration: underline;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        /* Preview */
+        .preview-container {
+            margin-top: 20px;
+            display: none;
+        }
+
+        .preview-container.active {
+            display: block;
+        }
+
+        #previewImage {
+            width: 100%;
+            max-height: 400px;
+            object-fit: contain;
+            border-radius: 10px;
+            border: 2px solid rgba(0, 255, 255, 0.3);
+        }
+
+        /* Analyze Button */
+        .analyze-btn {
+            width: 100%;
+            padding: 15px 30px;
+            margin-top: 20px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #0a0a1a;
+            background: linear-gradient(90deg, #00ffff, #00cccc);
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: none;
+        }
+
+        .analyze-btn.active {
+            display: block;
+        }
+
+        .analyze-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 255, 255, 0.5);
+        }
+
+        .analyze-btn:disabled {
+            background: #444;
+            color: #888;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Results */
+        .results-container {
+            display: none;
+        }
+
+        .results-container.active {
+            display: block;
+        }
+
+        .top-prediction {
+            background: linear-gradient(135deg, rgba(0, 255, 255, 0.2), rgba(255, 0, 255, 0.1));
+            border: 2px solid #00ffff;
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .top-prediction .label {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #00ffff;
+            text-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+        }
+
+        .top-prediction .confidence {
+            font-size: 3rem;
+            font-weight: bold;
+            background: linear-gradient(90deg, #00ff00, #00ffff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 10px 0;
+        }
+
+        .top-prediction .english {
+            color: #888;
+            font-size: 1rem;
+        }
+
+        /* Prediction List */
+        .prediction-list {
+            list-style: none;
+        }
+
+        .prediction-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            margin-bottom: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .prediction-item:hover {
+            background: rgba(0, 255, 255, 0.1);
+        }
+
+        .prediction-rank {
+            width: 30px;
+            height: 30px;
+            background: rgba(0, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #00ffff;
+            margin-right: 15px;
+        }
+
+        .prediction-info {
+            flex: 1;
+        }
+
+        .prediction-label {
+            font-weight: bold;
+            color: #fff;
+        }
+
+        .prediction-english {
+            font-size: 0.85rem;
+            color: #888;
+        }
+
+        .prediction-bar {
+            width: 150px;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-right: 15px;
+        }
+
+        .prediction-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00ffff, #ff00ff);
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+
+        .prediction-percent {
+            width: 60px;
+            text-align: right;
+            font-weight: bold;
+            color: #00ffff;
+        }
+
+        /* Demo Mode Notice */
+        .demo-notice {
+            background: rgba(255, 165, 0, 0.1);
+            border: 1px solid rgba(255, 165, 0, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .demo-notice h3 {
+            color: #ffa500;
+            margin-bottom: 5px;
+        }
+
+        .demo-notice p {
+            color: #888;
+            font-size: 0.9rem;
+        }
+
+        /* Sample Images */
+        .sample-images {
+            margin-top: 20px;
+        }
+
+        .sample-images h3 {
+            color: #888;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+
+        .sample-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+        }
+
+        .sample-item {
+            aspect-ratio: 1;
+            border-radius: 10px;
+            overflow: hidden;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            color: #888;
+            text-align: center;
+            padding: 5px;
+        }
+
+        .sample-item:hover {
+            border-color: #00ffff;
+            transform: scale(1.05);
+        }
+
+        /* Loading */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(0, 255, 255, 0.2);
+            border-top-color: #00ffff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* API Status */
+        .api-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin-top: 20px;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #ff4444;
+        }
+
+        .status-dot.online {
+            background: #00ff00;
+            box-shadow: 0 0 10px #00ff00;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 30px;
+            color: #555;
+            font-size: 0.85rem;
+            margin-top: 40px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🔬 DPI-600 Drug Logo Recognition</h1>
+            <p>ระบบ AI จำแนกโลโก้ยาเสพติด - สำนักงานพิสูจน์หลักฐานตำรวจ</p>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Upload Section -->
+            <div class="card">
+                <h2>📤 อัพโหลดภาพ</h2>
+                
+                <div class="demo-notice">
+                    <h3>🧪 Demo Mode</h3>
+                    <p>ระบบจำลองการทำงาน - เชื่อมต่อ API จริงที่ Settings</p>
+                </div>
+
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">📁</div>
+                    <p class="upload-text">
+                        ลากไฟล์มาวางที่นี่ หรือ <span>คลิกเลือกไฟล์</span>
+                    </p>
+                    <p style="color: #666; margin-top: 10px; font-size: 0.85rem;">
+                        รองรับ JPG, PNG, WebP
+                    </p>
+                </div>
+                <input type="file" id="fileInput" accept="image/*">
+
+                <div class="preview-container" id="previewContainer">
+                    <img id="previewImage" src="" alt="Preview">
+                </div>
+
+                <button class="analyze-btn" id="analyzeBtn">
+                    🔍 วิเคราะห์ภาพ
+                </button>
+
+                <!-- Sample Images -->
+                <div class="sample-images">
+                    <h3>หรือลองตัวอย่าง:</h3>
+                    <div class="sample-grid">
+                        <div class="sample-item" data-label="lion">🦁<br>สิงโต</div>
+                        <div class="sample-item" data-label="wy">WY</div>
+                        <div class="sample-item" data-label="999">999</div>
+                        <div class="sample-item" data-label="horse">🐴<br>ม้า</div>
+                        <div class="sample-item" data-label="ice">❄️<br>ไอซ์</div>
+                    </div>
+                </div>
+
+                <!-- API Status -->
+                <div class="api-status">
+                    <div class="status-dot" id="statusDot"></div>
+                    <span id="statusText">API: ไม่ได้เชื่อมต่อ (Demo Mode)</span>
+                </div>
+            </div>
+
+            <!-- Results Section -->
+            <div class="card">
+                <h2>📊 ผลการวิเคราะห์</h2>
+
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p>กำลังวิเคราะห์...</p>
+                </div>
+
+                <div class="results-container" id="resultsContainer">
+                    <div class="top-prediction">
+                        <div class="label" id="topLabel">-</div>
+                        <div class="confidence" id="topConfidence">--%</div>
+                        <div class="english" id="topEnglish">-</div>
+                    </div>
+
+                    <h3 style="color: #888; margin-bottom: 15px; font-size: 0.9rem;">
+                        ผลลัพธ์ทั้งหมด:
+                    </h3>
+                    <ul class="prediction-list" id="predictionList">
+                        <!-- Predictions will be inserted here -->
+                    </ul>
+                </div>
+
+                <div id="emptyState" style="text-align: center; padding: 60px 20px; color: #666;">
+                    <div style="font-size: 4rem; margin-bottom: 20px;">🔬</div>
+                    <p>อัพโหลดภาพเพื่อเริ่มวิเคราะห์</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>DPI-600 Drug Profile AI System v1.0</p>
+            <p>© 2024 สำนักงานพิสูจน์หลักฐานตำรวจ</p>
+        </div>
+    </div>
+
+    <script>
+        // =====================================================
+        // CONFIGURATION
+        // =====================================================
+        const CONFIG = {
+            apiUrl: 'http://localhost:5000',  // Change this to your API URL
+            demoMode: true
+        };
+
+        // Drug profiles for demo mode
+        const DRUG_PROFILES = {
+            lion: { th: 'สิงโต', en: 'Lion', color: '#ff6b35' },
+            wy: { th: 'WY', en: 'WY', color: '#00ff88' },
+            '999': { th: '999', en: '999', color: '#ff69b4' },
+            horse: { th: 'ม้า', en: 'Horse', color: '#8b4513' },
+            r_mark: { th: 'R', en: 'R Mark', color: '#ff0000' },
+            star: { th: 'ดาว', en: 'Star', color: '#ffd700' },
+            eagle: { th: 'นกอินทรี', en: 'Eagle', color: '#4169e1' },
+            no_logo: { th: 'ไม่มีโลโก้', en: 'No Logo', color: '#888888' },
+            ice: { th: 'ไอซ์', en: 'Ice/Crystal', color: '#00ffff' },
+            heroin: { th: 'เฮโรอีน', en: 'Heroin', color: '#8b0000' }
+        };
+
+        // =====================================================
+        // DOM ELEMENTS
+        // =====================================================
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const previewContainer = document.getElementById('previewContainer');
+        const previewImage = document.getElementById('previewImage');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const loading = document.getElementById('loading');
+        const resultsContainer = document.getElementById('resultsContainer');
+        const emptyState = document.getElementById('emptyState');
+        const statusDot = document.getElementById('statusDot');
+        const statusText = document.getElementById('statusText');
+
+        let currentFile = null;
+
+        // =====================================================
+        // EVENT LISTENERS
+        // =====================================================
+        
+        // Click to upload
+        uploadArea.addEventListener('click', () => fileInput.click());
+        
+        // File input change
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFile(e.target.files[0]);
+            }
+        });
+
+        // Drag and drop
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            if (e.dataTransfer.files.length > 0) {
+                handleFile(e.dataTransfer.files[0]);
+            }
+        });
+
+        // Analyze button
+        analyzeBtn.addEventListener('click', analyzeImage);
+
+        // Sample images
+        document.querySelectorAll('.sample-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const label = item.dataset.label;
+                simulatePrediction(label);
+            });
+        });
+
+        // =====================================================
+        // FUNCTIONS
+        // =====================================================
+
+        function handleFile(file) {
+            if (!file.type.startsWith('image/')) {
+                alert('กรุณาเลือกไฟล์รูปภาพ');
+                return;
+            }
+
+            currentFile = file;
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                previewImage.src = e.target.result;
+                previewContainer.classList.add('active');
+                analyzeBtn.classList.add('active');
+                uploadArea.style.display = 'none';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        async function analyzeImage() {
+            if (!currentFile) return;
+
+            // Show loading
+            loading.classList.add('active');
+            resultsContainer.classList.remove('active');
+            emptyState.style.display = 'none';
+            analyzeBtn.disabled = true;
+
+            if (CONFIG.demoMode) {
+                // Demo mode - simulate prediction
+                await new Promise(resolve => setTimeout(resolve, 1500));
+                const labels = Object.keys(DRUG_PROFILES);
+                const randomLabel = labels[Math.floor(Math.random() * labels.length)];
+                simulatePrediction(randomLabel);
+            } else {
+                // Real API call
+                try {
+                    const formData = new FormData();
+                    formData.append('image', currentFile);
+
+                    const response = await fetch(`${CONFIG.apiUrl}/predict`, {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const result = await response.json();
+                    displayResults(result);
+                } catch (error) {
+                    console.error('API Error:', error);
+                    alert('เกิดข้อผิดพลาดในการเชื่อมต่อ API');
+                }
+            }
+
+            loading.classList.remove('active');
+            analyzeBtn.disabled = false;
+        }
+
+        function simulatePrediction(topLabel) {
+            // Generate fake predictions
+            const labels = Object.keys(DRUG_PROFILES);
+            const predictions = [];
+            
+            // Top prediction
+            const topConf = 75 + Math.random() * 20;
+            predictions.push({
+                rank: 1,
+                label_id: topLabel,
+                label_th: DRUG_PROFILES[topLabel].th,
+                label_en: DRUG_PROFILES[topLabel].en,
+                confidence: topConf
+            });
+
+            // Other predictions
+            let remaining = 100 - topConf;
+            const otherLabels = labels.filter(l => l !== topLabel).sort(() => Math.random() - 0.5);
+            
+            for (let i = 0; i < 4; i++) {
+                const conf = i < 3 ? remaining * (0.3 + Math.random() * 0.4) : remaining;
+                remaining -= conf;
+                predictions.push({
+                    rank: i + 2,
+                    label_id: otherLabels[i],
+                    label_th: DRUG_PROFILES[otherLabels[i]].th,
+                    label_en: DRUG_PROFILES[otherLabels[i]].en,
+                    confidence: Math.max(0.1, conf)
+                });
+            }
+
+            displayResults({
+                top_prediction: predictions[0],
+                all_predictions: predictions
+            });
+        }
+
+        function displayResults(result) {
+            const { top_prediction, all_predictions } = result;
+
+            // Show top prediction
+            document.getElementById('topLabel').textContent = top_prediction.label_th;
+            document.getElementById('topConfidence').textContent = 
+                top_prediction.confidence.toFixed(1) + '%';
+            document.getElementById('topEnglish').textContent = top_prediction.label_en;
+
+            // Show all predictions
+            const listHtml = all_predictions.map(pred => `
+                <li class="prediction-item">
+                    <div class="prediction-rank">${pred.rank}</div>
+                    <div class="prediction-info">
+                        <div class="prediction-label">${pred.label_th}</div>
+                        <div class="prediction-english">${pred.label_en}</div>
+                    </div>
+                    <div class="prediction-bar">
+                        <div class="prediction-bar-fill" style="width: ${pred.confidence}%"></div>
+                    </div>
+                    <div class="prediction-percent">${pred.confidence.toFixed(1)}%</div>
+                </li>
+            `).join('');
+
+            document.getElementById('predictionList').innerHTML = listHtml;
+
+            // Show results container
+            resultsContainer.classList.add('active');
+            emptyState.style.display = 'none';
+        }
+
+        // Check API status
+        async function checkApiStatus() {
+            try {
+                const response = await fetch(`${CONFIG.apiUrl}/health`);
+                if (response.ok) {
+                    statusDot.classList.add('online');
+                    statusText.textContent = 'API: เชื่อมต่อแล้ว';
+                    CONFIG.demoMode = false;
+                }
+            } catch {
+                // Stay in demo mode
+            }
+        }
+
+        // Initialize
+        checkApiStatus();
+    </script>
+</body>
+</html>
