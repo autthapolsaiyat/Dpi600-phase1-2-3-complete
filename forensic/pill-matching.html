@@ -1,0 +1,1355 @@
+<!DOCTYPE html>
+<html lang="th" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DPI-600 Pill Fingerprint Matching</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --cyan: #00ffff;
+            --magenta: #ff00ff;
+            --purple: #8b5cf6;
+            --green: #00ff88;
+            --orange: #ff6600;
+            --yellow: #ffcc00;
+            --red: #ff4444;
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #050510;
+            --bg-secondary: #0a0a1a;
+            --bg-card: rgba(0, 0, 0, 0.4);
+            --bg-input: rgba(0, 0, 0, 0.5);
+            --text-primary: #ffffff;
+            --text-secondary: rgba(255, 255, 255, 0.7);
+            --text-muted: rgba(255, 255, 255, 0.5);
+            --border-color: rgba(0, 255, 255, 0.2);
+            --grid-color: rgba(0, 255, 255, 0.03);
+        }
+
+        [data-theme="light"] {
+            --bg-primary: #f0f4f8;
+            --bg-secondary: #ffffff;
+            --bg-card: rgba(255, 255, 255, 0.9);
+            --bg-input: rgba(255, 255, 255, 0.9);
+            --text-primary: #1a1a2e;
+            --text-secondary: rgba(26, 26, 46, 0.8);
+            --text-muted: rgba(26, 26, 46, 0.6);
+            --border-color: rgba(0, 150, 150, 0.3);
+            --grid-color: rgba(0, 100, 100, 0.08);
+            --cyan: #0099aa;
+            --magenta: #cc0088;
+            --green: #00aa66;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            transition: all 0.3s;
+        }
+
+        .bg-grid {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-image: 
+                linear-gradient(var(--grid-color) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+            background-size: 50px 50px;
+            z-index: -1;
+        }
+
+        /* Navigation */
+        .nav {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            background: rgba(5, 5, 16, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border-color);
+            padding: 15px 20px;
+        }
+
+        .nav-inner {
+            max-width: 1600px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-brand {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            color: var(--cyan);
+        }
+
+        .nav-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: transparent;
+            color: var(--text-secondary);
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn:hover {
+            border-color: var(--cyan);
+            color: var(--cyan);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--cyan), var(--magenta));
+            border: none;
+            color: #000;
+            font-weight: 600;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 255, 255, 0.4);
+        }
+
+        .theme-toggle { cursor: pointer; }
+
+        /* Container */
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Page Header */
+        .page-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .page-header h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2rem;
+            background: linear-gradient(135deg, var(--cyan), var(--magenta));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .page-header p {
+            color: var(--text-secondary);
+            margin-top: 8px;
+        }
+
+        /* Step Indicator */
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .step {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 20px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 25px;
+            opacity: 0.5;
+            transition: all 0.3s;
+        }
+
+        .step.active {
+            opacity: 1;
+            border-color: var(--cyan);
+            background: rgba(0, 255, 255, 0.1);
+        }
+
+        .step.completed {
+            opacity: 1;
+            border-color: var(--green);
+            background: rgba(0, 255, 136, 0.1);
+        }
+
+        .step-num {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.9rem;
+        }
+
+        .step.active .step-num {
+            background: var(--cyan);
+            color: #000;
+        }
+
+        .step.completed .step-num {
+            background: var(--green);
+            color: #000;
+        }
+
+        .step-text {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        /* Main Grid */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+        }
+
+        @media (max-width: 1200px) {
+            .main-grid { grid-template-columns: 1fr; }
+        }
+
+        /* Card */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 15px;
+            padding: 25px;
+            transition: all 0.3s;
+        }
+
+        .card:hover {
+            border-color: var(--cyan);
+        }
+
+        .card-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1rem;
+            color: var(--cyan);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Image Upload Zones */
+        .upload-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .upload-zone {
+            aspect-ratio: 1;
+            border: 2px dashed var(--border-color);
+            border-radius: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .upload-zone:hover {
+            border-color: var(--cyan);
+            background: rgba(0, 255, 255, 0.05);
+        }
+
+        .upload-zone.has-image {
+            border-style: solid;
+        }
+
+        .upload-zone.sample { border-color: var(--magenta); }
+        .upload-zone.reference { border-color: var(--cyan); }
+
+        .upload-label {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            padding: 5px 12px;
+            background: var(--bg-card);
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-family: 'Orbitron', sans-serif;
+            z-index: 5;
+        }
+
+        .upload-zone.sample .upload-label { color: var(--magenta); }
+        .upload-zone.reference .upload-label { color: var(--cyan); }
+
+        .upload-icon {
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+
+        .upload-text {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            text-align: center;
+        }
+
+        .upload-preview {
+            position: absolute;
+            inset: 0;
+            object-fit: contain;
+            padding: 10px;
+        }
+
+        .upload-zone.has-image .upload-placeholder {
+            display: none;
+        }
+
+        /* Comparison Panel */
+        .comparison-panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 25px;
+        }
+
+        .comparison-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            color: var(--cyan);
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        /* Overlay Container */
+        .overlay-container {
+            position: relative;
+            aspect-ratio: 1;
+            max-width: 400px;
+            margin: 0 auto 20px;
+            background: #111;
+            border-radius: 15px;
+            overflow: hidden;
+        }
+
+        .overlay-image {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .overlay-image.sample {
+            mix-blend-mode: normal;
+        }
+
+        .overlay-image.reference {
+            mix-blend-mode: difference;
+            opacity: 0.7;
+        }
+
+        /* Overlay Controls */
+        .overlay-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .control-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .control-slider {
+            width: 150px;
+            -webkit-appearance: none;
+            height: 8px;
+            background: var(--bg-input);
+            border-radius: 4px;
+        }
+
+        .control-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            background: linear-gradient(135deg, var(--cyan), var(--magenta));
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .blend-modes {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .blend-btn {
+            padding: 6px 12px;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .blend-btn:hover, .blend-btn.active {
+            border-color: var(--cyan);
+            color: var(--cyan);
+            background: rgba(0, 255, 255, 0.1);
+        }
+
+        /* Match Result */
+        .match-result {
+            text-align: center;
+            padding: 25px;
+            background: var(--bg-input);
+            border-radius: 15px;
+            margin-top: 20px;
+        }
+
+        .match-score {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 4rem;
+            margin-bottom: 10px;
+        }
+
+        .match-score.high { color: var(--green); }
+        .match-score.medium { color: var(--yellow); }
+        .match-score.low { color: var(--red); }
+
+        .match-label {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            margin-bottom: 15px;
+        }
+
+        .match-status {
+            display: inline-block;
+            padding: 8px 25px;
+            border-radius: 25px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.9rem;
+        }
+
+        .match-status.match {
+            background: rgba(0, 255, 136, 0.2);
+            color: var(--green);
+            border: 1px solid var(--green);
+        }
+
+        .match-status.no-match {
+            background: rgba(255, 68, 68, 0.2);
+            color: var(--red);
+            border: 1px solid var(--red);
+        }
+
+        .match-status.possible {
+            background: rgba(255, 204, 0, 0.2);
+            color: var(--yellow);
+            border: 1px solid var(--yellow);
+        }
+
+        /* Dimension Comparison */
+        .dimension-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .dim-item {
+            text-align: center;
+            padding: 15px;
+            background: var(--bg-input);
+            border-radius: 10px;
+        }
+
+        .dim-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 5px;
+        }
+
+        .dim-values {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .dim-sample { color: var(--magenta); }
+        .dim-ref { color: var(--cyan); }
+        .dim-diff { color: var(--green); font-size: 0.8rem; }
+        .dim-diff.over { color: var(--red); }
+
+        /* Chemical Comparison */
+        .chemical-compare {
+            margin-top: 20px;
+        }
+
+        .chem-row {
+            display: grid;
+            grid-template-columns: 120px 1fr 60px 60px 60px;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .chem-name {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .chem-bars {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .chem-bar {
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+            background: var(--bg-input);
+        }
+
+        .chem-fill {
+            height: 100%;
+            border-radius: 4px;
+        }
+
+        .chem-fill.sample { background: var(--magenta); }
+        .chem-fill.ref { background: var(--cyan); }
+
+        .chem-val {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.85rem;
+            text-align: right;
+        }
+
+        .chem-val.sample { color: var(--magenta); }
+        .chem-val.ref { color: var(--cyan); }
+
+        .chem-diff {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.85rem;
+            text-align: center;
+            padding: 3px 8px;
+            border-radius: 5px;
+        }
+
+        .chem-diff.ok { background: rgba(0, 255, 136, 0.2); color: var(--green); }
+        .chem-diff.warn { background: rgba(255, 204, 0, 0.2); color: var(--yellow); }
+        .chem-diff.bad { background: rgba(255, 68, 68, 0.2); color: var(--red); }
+
+        /* Profile Creation */
+        .profile-section {
+            margin-top: 25px;
+            padding: 25px;
+            background: rgba(0, 255, 136, 0.05);
+            border: 1px solid var(--green);
+            border-radius: 15px;
+        }
+
+        .profile-section.hidden {
+            display: none;
+        }
+
+        .profile-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.1rem;
+            color: var(--green);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .profile-id {
+            font-family: 'Fira Code', monospace;
+            font-size: 1.5rem;
+            color: var(--cyan);
+            margin-bottom: 15px;
+        }
+
+        .profile-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .profile-stat {
+            text-align: center;
+            padding: 15px;
+            background: var(--bg-card);
+            border-radius: 10px;
+        }
+
+        .profile-stat-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+            color: var(--cyan);
+        }
+
+        .profile-stat-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        /* Related Cases */
+        .related-cases {
+            margin-top: 20px;
+        }
+
+        .related-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1rem;
+            color: var(--cyan);
+            margin-bottom: 15px;
+        }
+
+        .case-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .case-item {
+            display: grid;
+            grid-template-columns: auto 1fr auto auto;
+            gap: 15px;
+            align-items: center;
+            padding: 12px 15px;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .case-item:hover {
+            border-color: var(--cyan);
+        }
+
+        .case-logo {
+            width: 35px;
+            height: 35px;
+            background: linear-gradient(135deg, var(--cyan), var(--magenta));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+        }
+
+        .case-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .case-num {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.85rem;
+            color: var(--cyan);
+        }
+
+        .case-meta {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .case-match {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1rem;
+            color: var(--green);
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 25px;
+        }
+
+        .btn-large {
+            padding: 15px 40px;
+            font-size: 1rem;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 25px;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-top: 40px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .footer a { color: var(--cyan); text-decoration: none; }
+
+        /* Tolerance Badge */
+        .tolerance-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 12px;
+            background: rgba(0, 255, 255, 0.1);
+            border: 1px solid var(--cyan);
+            border-radius: 15px;
+            font-size: 0.8rem;
+            color: var(--cyan);
+            margin-left: auto;
+        }
+
+        /* Loading */
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        .loading-overlay.visible {
+            display: flex;
+        }
+
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid var(--border-color);
+            border-top-color: var(--cyan);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            margin-top: 20px;
+            font-family: 'Orbitron', sans-serif;
+            color: var(--cyan);
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-grid"></div>
+
+    <!-- Loading -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">🔬 AI กำลังวิเคราะห์รูปร่างเม็ดยา...</div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="nav-inner">
+            <div class="nav-brand">🔬 DPI-600 Pill Fingerprint Matching</div>
+            <div class="nav-controls">
+                <button class="btn" onclick="resetAll()">🔄 Reset</button>
+                <div class="btn theme-toggle" onclick="toggleTheme()">
+                    <span id="themeIcon">🌙</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1>🔍 PILL FINGERPRINT MATCHING</h1>
+            <p>เปรียบเทียบรูปร่างเม็ดยา + สารเคมี เพื่อจับคู่และสร้าง Drug Profile</p>
+        </div>
+
+        <!-- Step Indicator -->
+        <div class="step-indicator">
+            <div class="step active" id="step1">
+                <div class="step-num">1</div>
+                <div class="step-text">📷 Upload Images</div>
+            </div>
+            <div class="step" id="step2">
+                <div class="step-num">2</div>
+                <div class="step-text">🔬 Shape Analysis</div>
+            </div>
+            <div class="step" id="step3">
+                <div class="step-num">3</div>
+                <div class="step-text">🧪 Chemical Compare</div>
+            </div>
+            <div class="step" id="step4">
+                <div class="step-num">4</div>
+                <div class="step-text">🆔 Create Profile</div>
+            </div>
+        </div>
+
+        <!-- Upload Section -->
+        <div class="main-grid">
+            <!-- Sample Image -->
+            <div class="card">
+                <div class="card-title">
+                    📷 SAMPLE IMAGE (ภาพตัวอย่างใหม่)
+                    <span class="tolerance-badge">±5% Tolerance</span>
+                </div>
+                <div class="upload-zone sample" id="sampleZone" onclick="document.getElementById('sampleInput').click()">
+                    <span class="upload-label">SAMPLE</span>
+                    <div class="upload-placeholder">
+                        <div class="upload-icon">📷</div>
+                        <div class="upload-text">คลิกเพื่ออัพโหลดภาพเม็ดยาใหม่<br>หรือลากไฟล์มาวาง</div>
+                    </div>
+                    <img class="upload-preview" id="samplePreview" style="display:none;">
+                </div>
+                <input type="file" id="sampleInput" accept="image/*" style="display:none;" onchange="handleUpload('sample', event)">
+                
+                <!-- Sample Dimensions -->
+                <div id="sampleDimensions" style="margin-top:15px; display:none;">
+                    <div class="card-title" style="font-size:0.9rem;">📐 Detected Dimensions</div>
+                    <div class="dimension-grid" style="grid-template-columns: repeat(3, 1fr);">
+                        <div class="dim-item">
+                            <div class="dim-label">Diameter</div>
+                            <div class="dim-values">
+                                <span class="dim-sample" id="sampleDiameter">6.2mm</span>
+                            </div>
+                        </div>
+                        <div class="dim-item">
+                            <div class="dim-label">Thickness</div>
+                            <div class="dim-values">
+                                <span class="dim-sample" id="sampleThickness">3.1mm</span>
+                            </div>
+                        </div>
+                        <div class="dim-item">
+                            <div class="dim-label">Color</div>
+                            <div class="dim-values">
+                                <span class="dim-sample" id="sampleColor" style="display:inline-block;width:20px;height:20px;border-radius:50%;background:#FF6B35;"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reference Image -->
+            <div class="card">
+                <div class="card-title">
+                    📁 REFERENCE IMAGE (ภาพอ้างอิงจาก Database)
+                </div>
+                <div class="upload-zone reference" id="refZone" onclick="document.getElementById('refInput').click()">
+                    <span class="upload-label">REFERENCE</span>
+                    <div class="upload-placeholder">
+                        <div class="upload-icon">📁</div>
+                        <div class="upload-text">เลือกจาก Database<br>หรืออัพโหลดภาพอ้างอิง</div>
+                    </div>
+                    <img class="upload-preview" id="refPreview" style="display:none;">
+                </div>
+                <input type="file" id="refInput" accept="image/*" style="display:none;" onchange="handleUpload('ref', event)">
+
+                <!-- Quick Select from DB -->
+                <div style="margin-top:15px;">
+                    <div class="card-title" style="font-size:0.9rem;">⚡ Quick Select from Database</div>
+                    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                        <button class="btn" onclick="selectReference('lion')">🦁 Lion</button>
+                        <button class="btn" onclick="selectReference('wy')">🔤 WY</button>
+                        <button class="btn" onclick="selectReference('999')">9️⃣ 999</button>
+                        <button class="btn" onclick="selectReference('horse')">🐴 Horse</button>
+                    </div>
+                </div>
+
+                <!-- Reference Dimensions -->
+                <div id="refDimensions" style="margin-top:15px; display:none;">
+                    <div class="card-title" style="font-size:0.9rem;">📐 Reference Dimensions</div>
+                    <div class="dimension-grid" style="grid-template-columns: repeat(3, 1fr);">
+                        <div class="dim-item">
+                            <div class="dim-label">Diameter</div>
+                            <div class="dim-values">
+                                <span class="dim-ref" id="refDiameter">6.3mm</span>
+                            </div>
+                        </div>
+                        <div class="dim-item">
+                            <div class="dim-label">Thickness</div>
+                            <div class="dim-values">
+                                <span class="dim-ref" id="refThickness">3.0mm</span>
+                            </div>
+                        </div>
+                        <div class="dim-item">
+                            <div class="dim-label">Color</div>
+                            <div class="dim-values">
+                                <span class="dim-ref" id="refColor" style="display:inline-block;width:20px;height:20px;border-radius:50%;background:#FF7744;"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Compare Button -->
+        <div class="action-buttons" id="compareSection" style="display:none;">
+            <button class="btn btn-primary btn-large" onclick="startComparison()">
+                🔬 เริ่มเปรียบเทียบ Shape & Chemical
+            </button>
+        </div>
+
+        <!-- Comparison Panel -->
+        <div class="comparison-panel" id="comparisonPanel" style="display:none;">
+            <div class="comparison-title">🔬 VISUAL OVERLAY COMPARISON</div>
+
+            <!-- Overlay Container -->
+            <div class="overlay-container" id="overlayContainer">
+                <img class="overlay-image sample" id="overlaySample" src="">
+                <img class="overlay-image reference" id="overlayRef" src="">
+            </div>
+
+            <!-- Overlay Controls -->
+            <div class="overlay-controls">
+                <div class="control-group">
+                    <span class="control-label">Reference Opacity</span>
+                    <input type="range" class="control-slider" id="opacitySlider" min="0" max="100" value="70" oninput="updateOverlay()">
+                </div>
+                <div class="control-group">
+                    <span class="control-label">Blend Mode</span>
+                    <div class="blend-modes">
+                        <button class="blend-btn active" onclick="setBlendMode('difference')">Difference</button>
+                        <button class="blend-btn" onclick="setBlendMode('overlay')">Overlay</button>
+                        <button class="blend-btn" onclick="setBlendMode('multiply')">Multiply</button>
+                        <button class="blend-btn" onclick="setBlendMode('screen')">Screen</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Match Result -->
+            <div class="match-result">
+                <div class="match-score high" id="visualScore">96.8%</div>
+                <div class="match-label">Visual Shape Similarity</div>
+                <span class="match-status match" id="visualStatus">✓ SHAPE MATCHED (within ±5%)</span>
+            </div>
+
+            <!-- Dimension Comparison -->
+            <div class="dimension-grid" style="margin-top:20px;">
+                <div class="dim-item">
+                    <div class="dim-label">Diameter</div>
+                    <div class="dim-values">
+                        <span class="dim-sample">6.2</span>
+                        <span style="color:var(--text-muted)">vs</span>
+                        <span class="dim-ref">6.3</span>
+                    </div>
+                    <div class="dim-diff">-1.6%</div>
+                </div>
+                <div class="dim-item">
+                    <div class="dim-label">Thickness</div>
+                    <div class="dim-values">
+                        <span class="dim-sample">3.1</span>
+                        <span style="color:var(--text-muted)">vs</span>
+                        <span class="dim-ref">3.0</span>
+                    </div>
+                    <div class="dim-diff">+3.3%</div>
+                </div>
+                <div class="dim-item">
+                    <div class="dim-label">Aspect Ratio</div>
+                    <div class="dim-values">
+                        <span class="dim-sample">1.00</span>
+                        <span style="color:var(--text-muted)">vs</span>
+                        <span class="dim-ref">1.00</span>
+                    </div>
+                    <div class="dim-diff">0%</div>
+                </div>
+                <div class="dim-item">
+                    <div class="dim-label">Color ΔE</div>
+                    <div class="dim-values">
+                        <span style="color:var(--green)">2.4</span>
+                    </div>
+                    <div class="dim-diff">Good</div>
+                </div>
+            </div>
+
+            <!-- Chemical Comparison -->
+            <div class="chemical-compare">
+                <div class="card-title" style="margin-top:25px;">🧪 CHEMICAL SIGNATURE COMPARISON</div>
+                
+                <div class="chem-row">
+                    <span class="chem-name">Methamphetamine</span>
+                    <div class="chem-bars">
+                        <div class="chem-bar"><div class="chem-fill sample" style="width:85%"></div></div>
+                        <div class="chem-bar"><div class="chem-fill ref" style="width:86%"></div></div>
+                    </div>
+                    <span class="chem-val sample">85%</span>
+                    <span class="chem-val ref">86%</span>
+                    <span class="chem-diff ok">-1%</span>
+                </div>
+                
+                <div class="chem-row">
+                    <span class="chem-name">Caffeine</span>
+                    <div class="chem-bars">
+                        <div class="chem-bar"><div class="chem-fill sample" style="width:42%"></div></div>
+                        <div class="chem-bar"><div class="chem-fill ref" style="width:40%"></div></div>
+                    </div>
+                    <span class="chem-val sample">42%</span>
+                    <span class="chem-val ref">40%</span>
+                    <span class="chem-diff ok">+2%</span>
+                </div>
+                
+                <div class="chem-row">
+                    <span class="chem-name">Lactose</span>
+                    <div class="chem-bars">
+                        <div class="chem-bar"><div class="chem-fill sample" style="width:20%"></div></div>
+                        <div class="chem-bar"><div class="chem-fill ref" style="width:21%"></div></div>
+                    </div>
+                    <span class="chem-val sample">20%</span>
+                    <span class="chem-val ref">21%</span>
+                    <span class="chem-diff ok">-1%</span>
+                </div>
+                
+                <div class="chem-row">
+                    <span class="chem-name">MDMA</span>
+                    <div class="chem-bars">
+                        <div class="chem-bar"><div class="chem-fill sample" style="width:5%"></div></div>
+                        <div class="chem-bar"><div class="chem-fill ref" style="width:4%"></div></div>
+                    </div>
+                    <span class="chem-val sample">5%</span>
+                    <span class="chem-val ref">4%</span>
+                    <span class="chem-diff ok">+1%</span>
+                </div>
+
+                <!-- Chemical Match Result -->
+                <div class="match-result" style="margin-top:20px;">
+                    <div class="match-score high" id="chemScore">97.2%</div>
+                    <div class="match-label">Chemical Signature Similarity</div>
+                    <span class="match-status match" id="chemStatus">✓ CHEMICAL MATCHED (within ±5%)</span>
+                </div>
+            </div>
+
+            <!-- Overall Result -->
+            <div style="background: linear-gradient(135deg, rgba(0,255,136,0.1), rgba(0,255,255,0.1)); border: 2px solid var(--green); border-radius: 15px; padding: 25px; margin-top: 25px; text-align: center;">
+                <div style="font-family: 'Orbitron', sans-serif; font-size: 1.2rem; color: var(--green); margin-bottom: 15px;">
+                    ✅ OVERALL MATCH RESULT
+                </div>
+                <div style="font-family: 'Orbitron', sans-serif; font-size: 3.5rem; color: var(--green);" id="overallScore">
+                    97.0%
+                </div>
+                <div style="color: var(--text-secondary); margin: 15px 0;">
+                    Visual (96.8%) × 0.5 + Chemical (97.2%) × 0.5
+                </div>
+                <span class="match-status match" style="font-size: 1.1rem; padding: 12px 30px;">
+                    🎯 SAME BATCH CONFIRMED
+                </span>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <button class="btn btn-large" onclick="showProfileSection()">
+                    🆔 สร้าง/เพิ่มเข้า Profile
+                </button>
+                <button class="btn btn-large" onclick="findRelatedCases()">
+                    🔗 ค้นหาคดีที่เกี่ยวข้อง
+                </button>
+            </div>
+        </div>
+
+        <!-- Profile Section -->
+        <div class="profile-section hidden" id="profileSection">
+            <div class="profile-title">🆔 DRUG PILL PROFILE</div>
+            <div class="profile-id">DPF-2568-0042</div>
+
+            <div class="profile-stats">
+                <div class="profile-stat">
+                    <div class="profile-stat-value">🦁</div>
+                    <div class="profile-stat-label">Logo: Lion</div>
+                </div>
+                <div class="profile-stat">
+                    <div class="profile-stat-value">6.2mm</div>
+                    <div class="profile-stat-label">Diameter</div>
+                </div>
+                <div class="profile-stat">
+                    <div class="profile-stat-value">85%</div>
+                    <div class="profile-stat-label">Meth Content</div>
+                </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div>
+                    <div style="font-size:0.9rem; color:var(--text-muted); margin-bottom:8px;">🎯 Linked Organization</div>
+                    <div style="font-family:'Orbitron',sans-serif; color:var(--green);">กลุ่มสิงโตทอง (97.5%)</div>
+                </div>
+                <div>
+                    <div style="font-size:0.9rem; color:var(--text-muted); margin-bottom:8px;">📍 Primary Region</div>
+                    <div style="font-family:'Orbitron',sans-serif; color:var(--cyan);">ภาคเหนือ</div>
+                </div>
+            </div>
+
+            <!-- Related Cases -->
+            <div class="related-cases">
+                <div class="related-title">🔗 RELATED CASES (12 คดี)</div>
+                <div class="case-list" id="relatedCaseList">
+                    <div class="case-item">
+                        <div class="case-logo">🦁</div>
+                        <div class="case-info">
+                            <div class="case-num">DPI-2568-000001</div>
+                            <div class="case-meta">📅 1 ธ.ค. 68 | 📍 เชียงราย | 50,000 เม็ด</div>
+                        </div>
+                        <div class="case-match">98.2%</div>
+                    </div>
+                    <div class="case-item">
+                        <div class="case-logo">🦁</div>
+                        <div class="case-info">
+                            <div class="case-num">DPI-2568-000047</div>
+                            <div class="case-meta">📅 15 พ.ย. 68 | 📍 เชียงใหม่ | 35,000 เม็ด</div>
+                        </div>
+                        <div class="case-match">97.8%</div>
+                    </div>
+                    <div class="case-item">
+                        <div class="case-logo">🦁</div>
+                        <div class="case-info">
+                            <div class="case-num">DPI-2568-000089</div>
+                            <div class="case-meta">📅 28 ต.ค. 68 | 📍 แม่ฮ่องสอน | 42,000 เม็ด</div>
+                        </div>
+                        <div class="case-match">96.5%</div>
+                    </div>
+                    <div class="case-item">
+                        <div class="case-logo">🦁</div>
+                        <div class="case-info">
+                            <div class="case-num">DPI-2567-000892</div>
+                            <div class="case-meta">📅 15 ก.ย. 67 | 📍 ลำปาง | 28,000 เม็ด</div>
+                        </div>
+                        <div class="case-match">95.1%</div>
+                    </div>
+                    <div class="case-item">
+                        <div class="case-logo">🦁</div>
+                        <div class="case-info">
+                            <div class="case-num">DPI-2567-000756</div>
+                            <div class="case-meta">📅 3 ส.ค. 67 | 📍 เชียงราย | 65,000 เม็ด</div>
+                        </div>
+                        <div class="case-match">94.7%</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Summary Stats -->
+            <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-top: 20px;">
+                <div class="dim-item">
+                    <div class="dim-label">Total Cases</div>
+                    <div style="font-family:'Orbitron',sans-serif; font-size:1.5rem; color:var(--cyan);">12</div>
+                </div>
+                <div class="dim-item">
+                    <div class="dim-label">Total Pills</div>
+                    <div style="font-family:'Orbitron',sans-serif; font-size:1.5rem; color:var(--magenta);">485K</div>
+                </div>
+                <div class="dim-item">
+                    <div class="dim-label">Date Range</div>
+                    <div style="font-family:'Orbitron',sans-serif; font-size:1rem; color:var(--green);">ส.ค.67-ธ.ค.68</div>
+                </div>
+                <div class="dim-item">
+                    <div class="dim-label">Provinces</div>
+                    <div style="font-family:'Orbitron',sans-serif; font-size:1.5rem; color:var(--orange);">4</div>
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <button class="btn btn-primary btn-large" onclick="saveProfile()">
+                    💾 บันทึก Profile
+                </button>
+                <button class="btn btn-large" onclick="exportReport()">
+                    📄 Export Report
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        © 2025 <a href="#">Autthapol Saiyat (Boy)</a> - Technology & AI Program Director | 
+        📱 085-070-9938 | 💬 LINE: boy_saiyat
+    </footer>
+
+    <script>
+        // State
+        let sampleImage = null;
+        let refImage = null;
+
+        // Handle Upload
+        function handleUpload(type, event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                if (type === 'sample') {
+                    sampleImage = e.target.result;
+                    document.getElementById('samplePreview').src = sampleImage;
+                    document.getElementById('samplePreview').style.display = 'block';
+                    document.getElementById('sampleZone').classList.add('has-image');
+                    document.getElementById('sampleDimensions').style.display = 'block';
+                    updateStep(1, 'completed');
+                } else {
+                    refImage = e.target.result;
+                    document.getElementById('refPreview').src = refImage;
+                    document.getElementById('refPreview').style.display = 'block';
+                    document.getElementById('refZone').classList.add('has-image');
+                    document.getElementById('refDimensions').style.display = 'block';
+                }
+
+                checkReadyToCompare();
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Select Reference from DB
+        function selectReference(logoType) {
+            // Simulate selecting from database
+            const logos = {
+                lion: { color: '#FF7744', diameter: '6.3mm', thickness: '3.0mm' },
+                wy: { color: '#44AAFF', diameter: '5.8mm', thickness: '2.9mm' },
+                '999': { color: '#FFCC00', diameter: '6.0mm', thickness: '3.2mm' },
+                horse: { color: '#88FF44', diameter: '6.5mm', thickness: '3.1mm' }
+            };
+
+            const selected = logos[logoType];
+            
+            // Create placeholder image
+            refImage = 'https://via.placeholder.com/300x300/1a1a2e/' + selected.color.replace('#', '') + '?text=' + logoType.toUpperCase();
+            document.getElementById('refPreview').src = refImage;
+            document.getElementById('refPreview').style.display = 'block';
+            document.getElementById('refZone').classList.add('has-image');
+            document.getElementById('refDimensions').style.display = 'block';
+            document.getElementById('refDiameter').textContent = selected.diameter;
+            document.getElementById('refThickness').textContent = selected.thickness;
+            document.getElementById('refColor').style.background = selected.color;
+
+            checkReadyToCompare();
+        }
+
+        // Check if ready to compare
+        function checkReadyToCompare() {
+            if (sampleImage && refImage) {
+                document.getElementById('compareSection').style.display = 'flex';
+                updateStep(2, 'active');
+            }
+        }
+
+        // Start Comparison
+        function startComparison() {
+            document.getElementById('loadingOverlay').classList.add('visible');
+            
+            setTimeout(() => {
+                document.getElementById('loadingOverlay').classList.remove('visible');
+                document.getElementById('comparisonPanel').style.display = 'block';
+                
+                // Set overlay images
+                document.getElementById('overlaySample').src = sampleImage;
+                document.getElementById('overlayRef').src = refImage;
+                
+                updateStep(2, 'completed');
+                updateStep(3, 'completed');
+                updateStep(4, 'active');
+
+                // Scroll to comparison
+                document.getElementById('comparisonPanel').scrollIntoView({ behavior: 'smooth' });
+            }, 2000);
+        }
+
+        // Update Overlay
+        function updateOverlay() {
+            const opacity = document.getElementById('opacitySlider').value / 100;
+            document.getElementById('overlayRef').style.opacity = opacity;
+        }
+
+        // Set Blend Mode
+        function setBlendMode(mode) {
+            document.querySelectorAll('.blend-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('overlayRef').style.mixBlendMode = mode;
+        }
+
+        // Show Profile Section
+        function showProfileSection() {
+            document.getElementById('profileSection').classList.remove('hidden');
+            updateStep(4, 'completed');
+            document.getElementById('profileSection').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Find Related Cases
+        function findRelatedCases() {
+            showProfileSection();
+        }
+
+        // Save Profile
+        function saveProfile() {
+            alert('✅ บันทึก Profile DPF-2568-0042 เรียบร้อยแล้ว!\n\nProfile นี้จะถูกใช้เป็น Reference สำหรับการจับคู่ในอนาคต');
+        }
+
+        // Export Report
+        function exportReport() {
+            alert('📄 กำลังสร้าง PDF Report...\n\nProfile: DPF-2568-0042\nRelated Cases: 12\nTotal Pills: 485,000');
+        }
+
+        // Update Step
+        function updateStep(stepNum, status) {
+            const step = document.getElementById('step' + stepNum);
+            step.classList.remove('active', 'completed');
+            step.classList.add(status);
+        }
+
+        // Reset All
+        function resetAll() {
+            sampleImage = null;
+            refImage = null;
+            
+            document.getElementById('samplePreview').style.display = 'none';
+            document.getElementById('refPreview').style.display = 'none';
+            document.getElementById('sampleZone').classList.remove('has-image');
+            document.getElementById('refZone').classList.remove('has-image');
+            document.getElementById('sampleDimensions').style.display = 'none';
+            document.getElementById('refDimensions').style.display = 'none';
+            document.getElementById('compareSection').style.display = 'none';
+            document.getElementById('comparisonPanel').style.display = 'none';
+            document.getElementById('profileSection').classList.add('hidden');
+            
+            ['step1', 'step2', 'step3', 'step4'].forEach((id, i) => {
+                updateStep(i + 1, i === 0 ? 'active' : '');
+            });
+        }
+
+        // Theme Toggle
+        function toggleTheme() {
+            const html = document.documentElement;
+            const newTheme = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            document.getElementById('themeIcon').textContent = newTheme === 'light' ? '☀️' : '🌙';
+            localStorage.setItem('dpi600-theme', newTheme);
+        }
+
+        // Load saved theme
+        const savedTheme = localStorage.getItem('dpi600-theme');
+        if (savedTheme) {
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            document.getElementById('themeIcon').textContent = savedTheme === 'light' ? '☀️' : '🌙';
+        }
+    </script>
+</body>
+</html>

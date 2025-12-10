@@ -1,0 +1,1575 @@
+<!DOCTYPE html>
+<html lang="th" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DPI-600 Investigation Center | Drug Profile AI System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* ========== THEME VARIABLES ========== */
+        :root {
+            --cyan: #00ffff;
+            --magenta: #ff00ff;
+            --purple: #8b5cf6;
+            --green: #00ff88;
+            --orange: #ff6600;
+            --yellow: #ffcc00;
+            --red: #ff4444;
+            --glow-cyan: 0 0 20px rgba(0, 255, 255, 0.5), 0 0 40px rgba(0, 255, 255, 0.3);
+            --glow-magenta: 0 0 20px rgba(255, 0, 255, 0.5), 0 0 40px rgba(255, 0, 255, 0.3);
+            --glow-green: 0 0 20px rgba(0, 255, 136, 0.5);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #050510;
+            --bg-secondary: #0a0a1a;
+            --bg-card: rgba(0, 0, 0, 0.4);
+            --bg-input: rgba(0, 0, 0, 0.5);
+            --text-primary: #ffffff;
+            --text-secondary: rgba(255, 255, 255, 0.7);
+            --text-muted: rgba(255, 255, 255, 0.5);
+            --border-color: rgba(0, 255, 255, 0.2);
+            --grid-color: rgba(0, 255, 255, 0.03);
+            --nav-bg: rgba(5, 5, 16, 0.95);
+        }
+
+        [data-theme="light"] {
+            --bg-primary: #f0f4f8;
+            --bg-secondary: #ffffff;
+            --bg-card: rgba(255, 255, 255, 0.9);
+            --bg-input: rgba(255, 255, 255, 0.9);
+            --text-primary: #1a1a2e;
+            --text-secondary: rgba(26, 26, 46, 0.8);
+            --text-muted: rgba(26, 26, 46, 0.6);
+            --border-color: rgba(0, 150, 150, 0.3);
+            --grid-color: rgba(0, 100, 100, 0.08);
+            --nav-bg: rgba(240, 244, 248, 0.95);
+            --cyan: #0099aa;
+            --magenta: #cc0088;
+            --green: #00aa66;
+            --orange: #dd5500;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        /* Background Effects */
+        .bg-grid {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-image: 
+                linear-gradient(var(--grid-color) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: gridMove 20s linear infinite;
+            z-index: -3;
+        }
+
+        @keyframes gridMove {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(50px, 50px); }
+        }
+
+        .particles {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: -2;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .particle {
+            position: absolute;
+            width: 3px; height: 3px;
+            background: var(--cyan);
+            border-radius: 50%;
+            animation: particleFloat 20s infinite ease-in-out;
+            opacity: 0.6;
+        }
+
+        .particle:nth-child(odd) { background: var(--magenta); }
+
+        @keyframes particleFloat {
+            0%, 100% { transform: translateY(100vh); opacity: 0; }
+            10% { opacity: 0.6; }
+            90% { opacity: 0.6; }
+            100% { transform: translateY(-100vh); opacity: 0; }
+        }
+
+        /* Login Overlay */
+        .login-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 100;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: rgba(5, 5, 16, 0.97);
+            backdrop-filter: blur(10px);
+            transition: all 0.5s ease;
+        }
+
+        .login-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .login-card {
+            position: relative;
+            width: 95%;
+            max-width: 420px;
+            padding: 40px 35px;
+            background: linear-gradient(135deg, rgba(0, 255, 255, 0.05), rgba(255, 0, 255, 0.05));
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 25px;
+            overflow: hidden;
+            animation: cardAppear 0.8s ease-out;
+        }
+
+        @keyframes cardAppear {
+            from { opacity: 0; transform: translateY(30px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .login-card::before {
+            content: '';
+            position: absolute;
+            top: -50%; left: -50%;
+            width: 200%; height: 200%;
+            background: conic-gradient(from 0deg, transparent, rgba(0, 255, 255, 0.1), transparent 30%);
+            animation: rotateBorder 6s linear infinite;
+        }
+
+        @keyframes rotateBorder {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .login-card::after {
+            content: '';
+            position: absolute;
+            inset: 1px;
+            background: linear-gradient(135deg, rgba(10, 10, 26, 0.98), rgba(20, 20, 40, 0.95));
+            border-radius: 24px;
+            z-index: 0;
+        }
+
+        .login-inner { position: relative; z-index: 1; }
+        .logo-section { text-align: center; margin-bottom: 25px; }
+
+        .logo-ring {
+            width: 90px; height: 90px;
+            margin: 0 auto 15px;
+            border: 3px solid #00ffff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            animation: logoPulse 3s ease-in-out infinite;
+        }
+
+        .logo-ring::before {
+            content: '';
+            position: absolute;
+            width: 110px; height: 110px;
+            border: 1px solid #ff00ff;
+            border-radius: 50%;
+            animation: logoRotate 10s linear infinite;
+        }
+
+        @keyframes logoPulse {
+            0%, 100% { box-shadow: 0 0 20px rgba(0, 255, 255, 0.5); }
+            50% { box-shadow: 0 0 20px rgba(255, 0, 255, 0.5); }
+        }
+
+        @keyframes logoRotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .logo-text {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #00ffff, #ff00ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .login-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            margin-bottom: 5px;
+            background: linear-gradient(90deg, #00ffff, #ff00ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .login-subtitle {
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 5px 14px;
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid rgba(0, 255, 136, 0.4);
+            border-radius: 50px;
+            font-size: 0.75rem;
+            color: #00ff88;
+            margin-top: 12px;
+        }
+
+        .status-dot {
+            width: 6px; height: 6px;
+            background: #00ff88;
+            border-radius: 50%;
+            animation: statusBlink 1.5s ease-in-out infinite;
+        }
+
+        @keyframes statusBlink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .form-group { margin-bottom: 18px; }
+
+        .form-label {
+            display: block;
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .input-wrapper { position: relative; }
+
+        .input-wrapper input {
+            width: 100%;
+            padding: 12px 16px 12px 45px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 10px;
+            color: #fff;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        .input-wrapper input:focus {
+            border-color: #00ffff;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+        }
+
+        .input-wrapper input::placeholder { color: rgba(255, 255, 255, 0.3); }
+
+        .input-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.1rem;
+            opacity: 0.6;
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 14px;
+            margin-top: 8px;
+            background: linear-gradient(135deg, #00ffff, #ff00ff);
+            border: none;
+            border-radius: 10px;
+            color: #000;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 255, 255, 0.4);
+        }
+
+        .demo-hint {
+            margin-top: 18px;
+            padding: 12px;
+            background: rgba(255, 102, 0, 0.1);
+            border: 1px solid rgba(255, 102, 0, 0.3);
+            border-radius: 8px;
+            text-align: center;
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .demo-hint code {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: #00ffff;
+            font-family: 'Fira Code', monospace;
+        }
+
+        .error-msg {
+            display: none;
+            padding: 10px;
+            background: rgba(255, 0, 0, 0.1);
+            border: 1px solid rgba(255, 0, 0, 0.4);
+            border-radius: 8px;
+            color: #ff6666;
+            font-size: 0.85rem;
+            text-align: center;
+            margin-top: 12px;
+        }
+
+        /* Main Content */
+        .main-content { display: none; }
+        .main-content.visible {
+            display: block;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Navigation */
+        .nav {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            background: var(--nav-bg);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border-color);
+            padding: 15px 20px;
+        }
+
+        .nav-inner {
+            max-width: 1600px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .nav-brand {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--cyan);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-user {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+
+        .theme-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .theme-toggle:hover { border-color: var(--cyan); }
+
+        .theme-icon { font-size: 1.1rem; }
+        .theme-label { font-size: 0.8rem; color: var(--text-secondary); }
+
+        /* Container */
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Page Title */
+        .page-title {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .page-title h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2rem;
+            background: linear-gradient(135deg, var(--cyan), var(--magenta));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+
+        .page-title p {
+            color: var(--text-secondary);
+            font-size: 1rem;
+        }
+
+        /* Main Grid Layout */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 1200px) {
+            .main-grid { grid-template-columns: 1fr; }
+        }
+
+        /* Card */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 15px;
+            padding: 25px;
+            transition: all 0.3s;
+        }
+
+        .card:hover {
+            border-color: var(--cyan);
+        }
+
+        .card-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1rem;
+            color: var(--cyan);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Image Upload */
+        .upload-zone {
+            border: 2px dashed var(--border-color);
+            border-radius: 12px;
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .upload-zone:hover {
+            border-color: var(--cyan);
+            background: rgba(0, 255, 255, 0.05);
+        }
+
+        .upload-zone.has-image {
+            padding: 10px;
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+
+        .upload-text {
+            color: var(--text-secondary);
+            font-size: 1rem;
+        }
+
+        .upload-preview {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .upload-zone.has-image .upload-preview {
+            display: block;
+            margin: 0 auto;
+        }
+
+        .upload-zone.has-image .upload-placeholder {
+            display: none;
+        }
+
+        /* Detection Result */
+        .detection-result {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid var(--green);
+            border-radius: 10px;
+            display: none;
+        }
+
+        .detection-result.visible {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .detection-logo {
+            font-size: 2rem;
+            margin-bottom: 8px;
+        }
+
+        .detection-name {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.3rem;
+            color: var(--green);
+        }
+
+        .detection-confidence {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        /* Chemical Inputs */
+        .chemical-grid {
+            display: grid;
+            gap: 15px;
+        }
+
+        .chemical-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .chemical-label {
+            width: 150px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .chemical-slider {
+            flex: 1;
+            -webkit-appearance: none;
+            height: 8px;
+            background: var(--bg-input);
+            border-radius: 4px;
+            outline: none;
+        }
+
+        .chemical-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: linear-gradient(135deg, var(--cyan), var(--magenta));
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .chemical-value {
+            width: 50px;
+            text-align: right;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.9rem;
+            color: var(--cyan);
+        }
+
+        /* Location & Case Info */
+        .info-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .info-input {
+            width: 100%;
+            padding: 12px 15px;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        .info-input:focus {
+            border-color: var(--cyan);
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+        }
+
+        .info-select {
+            width: 100%;
+            padding: 12px 15px;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1rem;
+            outline: none;
+            cursor: pointer;
+        }
+
+        /* Analyze Button */
+        .analyze-btn {
+            width: 100%;
+            padding: 18px;
+            margin-top: 25px;
+            background: linear-gradient(135deg, var(--cyan), var(--magenta));
+            border: none;
+            border-radius: 12px;
+            color: #000;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 700;
+            letter-spacing: 3px;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .analyze-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s;
+        }
+
+        .analyze-btn:hover::before {
+            left: 100%;
+        }
+
+        .analyze-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0, 255, 255, 0.4);
+        }
+
+        .analyze-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Results Section */
+        .results-section {
+            display: none;
+        }
+
+        .results-section.visible {
+            display: block;
+            animation: slideUp 0.6s ease;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .results-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+            color: var(--cyan);
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        /* Candidate Cards */
+        .candidate-list {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .candidate-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 15px;
+            padding: 25px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+
+        .candidate-card:hover {
+            border-color: var(--cyan);
+            transform: translateX(5px);
+        }
+
+        .candidate-card.rank-1 { border-left: 4px solid var(--green); }
+        .candidate-card.rank-2 { border-left: 4px solid var(--cyan); }
+        .candidate-card.rank-3 { border-left: 4px solid var(--orange); }
+
+        .candidate-rank {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 2rem;
+        }
+
+        .candidate-name {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.3rem;
+            color: var(--text-primary);
+            margin-bottom: 10px;
+        }
+
+        .candidate-region {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-secondary);
+            margin-bottom: 15px;
+        }
+
+        .candidate-scores {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .score-item {
+            text-align: center;
+            padding: 10px;
+            background: rgba(0, 255, 255, 0.05);
+            border-radius: 8px;
+        }
+
+        .score-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 5px;
+        }
+
+        .score-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            color: var(--cyan);
+        }
+
+        /* Overall Confidence Bar */
+        .confidence-bar-container {
+            margin-bottom: 15px;
+        }
+
+        .confidence-bar-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            margin-bottom: 5px;
+        }
+
+        .confidence-bar {
+            height: 12px;
+            background: var(--bg-input);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--green), var(--cyan));
+            border-radius: 6px;
+            transition: width 1s ease;
+        }
+
+        .candidate-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .related-cases {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .candidate-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-small {
+            padding: 8px 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background: transparent;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-small:hover {
+            border-color: var(--cyan);
+            color: var(--cyan);
+            background: rgba(0, 255, 255, 0.1);
+        }
+
+        /* Map Section */
+        .map-section {
+            margin-top: 30px;
+        }
+
+        .map-container {
+            height: 400px;
+            border-radius: 15px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+
+        #thailandMap {
+            height: 100%;
+            width: 100%;
+            background: var(--bg-secondary);
+        }
+
+        /* Chart Section */
+        .chart-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        @media (max-width: 900px) {
+            .chart-section { grid-template-columns: 1fr; }
+        }
+
+        .chart-container {
+            height: 300px;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 25px 20px;
+            background: var(--bg-card);
+            border-top: 1px solid var(--border-color);
+            margin-top: 40px;
+        }
+
+        .footer-text {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .footer-text a {
+            color: var(--cyan);
+            text-decoration: none;
+        }
+
+        /* Loading Overlay */
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 200;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        .loading-overlay.visible {
+            display: flex;
+        }
+
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid var(--border-color);
+            border-top-color: var(--cyan);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            margin-top: 20px;
+            font-family: 'Orbitron', sans-serif;
+            color: var(--cyan);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .page-title h1 { font-size: 1.5rem; }
+            .info-row { grid-template-columns: 1fr; }
+            .candidate-scores { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-grid"></div>
+    <div class="particles" id="particles"></div>
+
+    <!-- Login Overlay -->
+    <div class="login-overlay" id="loginOverlay">
+        <div class="login-card">
+            <div class="login-inner">
+                <div class="logo-section">
+                    <div class="logo-ring">
+                        <span class="logo-text">DPI</span>
+                    </div>
+                    <h1 class="login-title">INVESTIGATION CENTER</h1>
+                    <p class="login-subtitle">DPI-600 Drug Profile AI System</p>
+                    <div class="status-pill">
+                        <span class="status-dot"></span>
+                        <span>AI READY</span>
+                    </div>
+                </div>
+
+                <form id="loginForm" onsubmit="return handleLogin(event)">
+                    <div class="form-group">
+                        <label class="form-label">Username</label>
+                        <div class="input-wrapper">
+                            <span class="input-icon">👤</span>
+                            <input type="text" id="username" placeholder="Enter username" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Password</label>
+                        <div class="input-wrapper">
+                            <span class="input-icon">🔒</span>
+                            <input type="password" id="password" placeholder="Enter password" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="login-btn">🔓 ACCESS SYSTEM</button>
+                    <div class="error-msg" id="errorMsg">❌ Invalid credentials</div>
+                </form>
+
+                <div class="demo-hint">
+                    ⚡ Demo: <code>admin</code> / <code>admin123</code>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">🧠 AI กำลังวิเคราะห์...</div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content" id="mainContent">
+        <!-- Navigation -->
+        <nav class="nav">
+            <div class="nav-inner">
+                <div class="nav-brand">
+                    🔬 DPI-600 Investigation Center
+                </div>
+                <div class="nav-user">
+                    <div class="user-info">
+                        <span>👤</span>
+                        <span id="currentUser">พ.ต.ท.สมชาย</span>
+                    </div>
+                    <div class="theme-toggle" onclick="toggleTheme()">
+                        <span class="theme-icon" id="themeIcon">🌙</span>
+                        <span class="theme-label" id="themeLabel">Dark</span>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <div class="container">
+            <!-- Page Title -->
+            <div class="page-title">
+                <h1>🎯 CASE ANALYSIS</h1>
+                <p>อัพโหลดภาพยาเสพติด + ข้อมูลทางเคมี เพื่อวิเคราะห์หาแหล่งที่มาและกลุ่มเครือข่าย</p>
+            </div>
+
+            <!-- Input Section -->
+            <div class="main-grid">
+                <!-- Left: Image Upload -->
+                <div class="card">
+                    <div class="card-title">📷 DRUG IMAGE</div>
+                    <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+                        <div class="upload-placeholder">
+                            <div class="upload-icon">📷</div>
+                            <div class="upload-text">คลิกเพื่ออัพโหลดภาพ หรือลากไฟล์มาวาง</div>
+                        </div>
+                        <img class="upload-preview" id="uploadPreview" alt="Preview">
+                    </div>
+                    <input type="file" id="fileInput" accept="image/*" style="display: none;" onchange="handleFileSelect(event)">
+                    
+                    <div class="detection-result" id="detectionResult">
+                        <div class="detection-logo" id="detectedLogo">🦁</div>
+                        <div class="detection-name" id="detectedName">LION</div>
+                        <div class="detection-confidence">Confidence: <span id="detectedConf">97.5%</span></div>
+                    </div>
+                </div>
+
+                <!-- Right: Chemical Profile & Info -->
+                <div class="card">
+                    <div class="card-title">🧪 CHEMICAL PROFILE</div>
+                    <div class="chemical-grid">
+                        <div class="chemical-item">
+                            <span class="chemical-label">Methamphetamine</span>
+                            <input type="range" class="chemical-slider" id="chemMeth" min="0" max="100" value="85" oninput="updateChemValue(this, 'methValue')">
+                            <span class="chemical-value" id="methValue">85%</span>
+                        </div>
+                        <div class="chemical-item">
+                            <span class="chemical-label">Caffeine</span>
+                            <input type="range" class="chemical-slider" id="chemCaff" min="0" max="100" value="42" oninput="updateChemValue(this, 'caffValue')">
+                            <span class="chemical-value" id="caffValue">42%</span>
+                        </div>
+                        <div class="chemical-item">
+                            <span class="chemical-label">Lactose</span>
+                            <input type="range" class="chemical-slider" id="chemLact" min="0" max="100" value="18" oninput="updateChemValue(this, 'lactValue')">
+                            <span class="chemical-value" id="lactValue">18%</span>
+                        </div>
+                        <div class="chemical-item">
+                            <span class="chemical-label">MDMA</span>
+                            <input type="range" class="chemical-slider" id="chemMdma" min="0" max="100" value="5" oninput="updateChemValue(this, 'mdmaValue')">
+                            <span class="chemical-value" id="mdmaValue">5%</span>
+                        </div>
+                    </div>
+
+                    <div class="info-row">
+                        <select class="info-select" id="seizureProvince">
+                            <option value="">📍 เลือกจังหวัดที่ยึดได้</option>
+                            <option value="เชียงราย">เชียงราย</option>
+                            <option value="เชียงใหม่">เชียงใหม่</option>
+                            <option value="แม่ฮ่องสอน">แม่ฮ่องสอน</option>
+                            <option value="นครพนม">นครพนม</option>
+                            <option value="มุกดาหาร">มุกดาหาร</option>
+                            <option value="อุบลราชธานี">อุบลราชธานี</option>
+                            <option value="กรุงเทพมหานคร">กรุงเทพมหานคร</option>
+                            <option value="สมุทรปราการ">สมุทรปราการ</option>
+                            <option value="ชลบุรี">ชลบุรี</option>
+                            <option value="สงขลา">สงขลา</option>
+                            <option value="นราธิวาส">นราธิวาส</option>
+                        </select>
+                        <input type="date" class="info-input" id="seizureDate" value="2568-12-10">
+                    </div>
+
+                    <div class="info-row">
+                        <input type="text" class="info-input" id="caseNumber" placeholder="📋 หมายเลขคดี (เช่น DPI-2568-001234)">
+                        <input type="number" class="info-input" id="quantity" placeholder="💊 จำนวนเม็ด">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analyze Button -->
+            <button class="analyze-btn" id="analyzeBtn" onclick="analyzeCase()">
+                🔍 วิเคราะห์และค้นหา CANDIDATE MATCHES
+            </button>
+
+            <!-- Results Section -->
+            <div class="results-section" id="resultsSection">
+                <h2 class="results-title">📊 CANDIDATE MATCHES</h2>
+
+                <div class="candidate-list" id="candidateList">
+                    <!-- Candidates will be inserted here -->
+                </div>
+
+                <!-- Map Section -->
+                <div class="map-section">
+                    <div class="card">
+                        <div class="card-title">🗺️ GEOGRAPHIC HEATMAP</div>
+                        <div class="map-container">
+                            <div id="thailandMap"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Section -->
+                <div class="chart-section">
+                    <div class="card">
+                        <div class="card-title">📈 CONFIDENCE COMPARISON</div>
+                        <div class="chart-container">
+                            <canvas id="confidenceChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">🧪 CHEMICAL SIGNATURE MATCH</div>
+                        <div class="chart-container">
+                            <canvas id="chemicalChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="footer-text">
+                © 2025 <a href="#">Autthapol Saiyat (Boy)</a> - Technology & AI Program Director | 
+                📱 085-070-9938 | 💬 LINE: boy_saiyat
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // ========== DATA ==========
+        const organizations = [
+            {
+                id: 1,
+                name: 'กลุ่มเครือข่าย "สิงโตทอง"',
+                region: 'ภาคเหนือ',
+                provinces: ['เชียงราย', 'เชียงใหม่', 'แม่ฮ่องสอน'],
+                logoTypes: ['lion', 'tiger'],
+                chemicalSignature: { meth: 85, caff: 40, lact: 20, mdma: 5 },
+                caseCount: 47,
+                years: '2566-2568',
+                lat: 19.9,
+                lng: 99.8,
+                color: '#00ff88'
+            },
+            {
+                id: 2,
+                name: 'กลุ่มเครือข่าย "WY International"',
+                region: 'ภาคอีสาน',
+                provinces: ['นครพนม', 'มุกดาหาร', 'อุบลราชธานี'],
+                logoTypes: ['wy', 'yaba'],
+                chemicalSignature: { meth: 78, caff: 55, lact: 25, mdma: 8 },
+                caseCount: 23,
+                years: '2567-2568',
+                lat: 16.5,
+                lng: 104.5,
+                color: '#00ffff'
+            },
+            {
+                id: 3,
+                name: 'กลุ่มเครือข่าย "ชายแดนใต้"',
+                region: 'ภาคกลาง',
+                provinces: ['กรุงเทพมหานคร', 'สมุทรปราการ', 'ชลบุรี'],
+                logoTypes: ['999', 'star'],
+                chemicalSignature: { meth: 70, caff: 30, lact: 35, mdma: 15 },
+                caseCount: 12,
+                years: '2568',
+                lat: 13.75,
+                lng: 100.5,
+                color: '#ff6600'
+            }
+        ];
+
+        const logoEmojis = {
+            lion: '🦁',
+            tiger: '🐯',
+            wy: '🔤',
+            yaba: '💊',
+            '999': '9️⃣',
+            star: '⭐',
+            horse: '🐴',
+            eagle: '🦅'
+        };
+
+        let map = null;
+        let markers = [];
+        let confidenceChart = null;
+        let chemicalChart = null;
+
+        // ========== LOGIN ==========
+        function handleLogin(e) {
+            e.preventDefault();
+            const user = document.getElementById('username').value.trim();
+            const pass = document.getElementById('password').value.trim();
+            
+            if (user === 'admin' && pass === 'admin123') {
+                document.getElementById('loginOverlay').classList.add('hidden');
+                setTimeout(() => {
+                    document.getElementById('loginOverlay').style.display = 'none';
+                    document.getElementById('mainContent').classList.add('visible');
+                    initMap();
+                }, 500);
+            } else {
+                const err = document.getElementById('errorMsg');
+                err.style.display = 'block';
+                setTimeout(() => err.style.display = 'none', 3000);
+            }
+            return false;
+        }
+
+        // ========== THEME ==========
+        function toggleTheme() {
+            const html = document.documentElement;
+            const newTheme = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            
+            document.getElementById('themeIcon').textContent = newTheme === 'light' ? '☀️' : '🌙';
+            document.getElementById('themeLabel').textContent = newTheme === 'light' ? 'Light' : 'Dark';
+            localStorage.setItem('dpi600-theme', newTheme);
+        }
+
+        // ========== FILE UPLOAD ==========
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const preview = document.getElementById('uploadPreview');
+                    preview.src = e.target.result;
+                    document.getElementById('uploadZone').classList.add('has-image');
+                    
+                    // Simulate AI detection
+                    setTimeout(() => {
+                        document.getElementById('detectionResult').classList.add('visible');
+                    }, 500);
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // Drag & Drop
+        const uploadZone = document.getElementById('uploadZone');
+        uploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadZone.style.borderColor = 'var(--cyan)';
+        });
+        uploadZone.addEventListener('dragleave', () => {
+            uploadZone.style.borderColor = 'var(--border-color)';
+        });
+        uploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadZone.style.borderColor = 'var(--border-color)';
+            const file = e.dataTransfer.files[0];
+            if (file) {
+                document.getElementById('fileInput').files = e.dataTransfer.files;
+                handleFileSelect({ target: { files: [file] } });
+            }
+        });
+
+        // ========== CHEMICAL SLIDERS ==========
+        function updateChemValue(slider, valueId) {
+            document.getElementById(valueId).textContent = slider.value + '%';
+        }
+
+        // ========== ANALYZE ==========
+        function analyzeCase() {
+            // Show loading
+            document.getElementById('loadingOverlay').classList.add('visible');
+            
+            // Get input values
+            const chemProfile = {
+                meth: parseInt(document.getElementById('chemMeth').value),
+                caff: parseInt(document.getElementById('chemCaff').value),
+                lact: parseInt(document.getElementById('chemLact').value),
+                mdma: parseInt(document.getElementById('chemMdma').value)
+            };
+            
+            const province = document.getElementById('seizureProvince').value;
+
+            // Calculate matches
+            setTimeout(() => {
+                const results = calculateMatches(chemProfile, province);
+                displayResults(results);
+                document.getElementById('loadingOverlay').classList.remove('visible');
+            }, 2000);
+        }
+
+        function calculateMatches(chemProfile, province) {
+            return organizations.map(org => {
+                // Chemical similarity (Euclidean distance based)
+                const chemDiff = Math.sqrt(
+                    Math.pow(chemProfile.meth - org.chemicalSignature.meth, 2) +
+                    Math.pow(chemProfile.caff - org.chemicalSignature.caff, 2) +
+                    Math.pow(chemProfile.lact - org.chemicalSignature.lact, 2) +
+                    Math.pow(chemProfile.mdma - org.chemicalSignature.mdma, 2)
+                );
+                const chemMatch = Math.max(0, 100 - chemDiff);
+
+                // Logo match (simulated)
+                const logoMatch = 85 + Math.random() * 15;
+
+                // Geo match
+                const geoMatch = org.provinces.includes(province) ? 95 : 30 + Math.random() * 30;
+
+                // Overall
+                const overall = (logoMatch * 0.4) + (chemMatch * 0.4) + (geoMatch * 0.2);
+
+                return {
+                    ...org,
+                    logoMatch: logoMatch.toFixed(1),
+                    chemMatch: chemMatch.toFixed(1),
+                    geoMatch: geoMatch.toFixed(1),
+                    overall: overall.toFixed(1)
+                };
+            }).sort((a, b) => b.overall - a.overall);
+        }
+
+        function displayResults(results) {
+            // Show results section
+            document.getElementById('resultsSection').classList.add('visible');
+
+            // Generate candidate cards
+            const listHtml = results.map((org, index) => `
+                <div class="candidate-card rank-${index + 1}">
+                    <div class="candidate-rank">${index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉'}</div>
+                    <div class="candidate-name">${org.name}</div>
+                    <div class="candidate-region">
+                        📍 ${org.region} (${org.provinces.join(', ')})
+                    </div>
+                    <div class="candidate-scores">
+                        <div class="score-item">
+                            <div class="score-label">📷 Logo Match</div>
+                            <div class="score-value">${org.logoMatch}%</div>
+                        </div>
+                        <div class="score-item">
+                            <div class="score-label">🧪 Chemical Match</div>
+                            <div class="score-value">${org.chemMatch}%</div>
+                        </div>
+                        <div class="score-item">
+                            <div class="score-label">📍 Geo Match</div>
+                            <div class="score-value">${org.geoMatch}%</div>
+                        </div>
+                    </div>
+                    <div class="confidence-bar-container">
+                        <div class="confidence-bar-label">
+                            <span>📈 Overall Confidence</span>
+                            <span style="color: var(--cyan); font-weight: bold;">${org.overall}%</span>
+                        </div>
+                        <div class="confidence-bar">
+                            <div class="confidence-fill" style="width: ${org.overall}%"></div>
+                        </div>
+                    </div>
+                    <div class="candidate-meta">
+                        <div class="related-cases">📋 Related Cases: ${org.caseCount} cases (${org.years})</div>
+                        <div class="candidate-actions">
+                            <button class="btn-small" onclick="viewDetails(${org.id})">👁️ View Details</button>
+                            <button class="btn-small" onclick="exportReport(${org.id})">📄 Export</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            document.getElementById('candidateList').innerHTML = listHtml;
+
+            // Update map markers
+            updateMapMarkers(results);
+
+            // Update charts
+            updateCharts(results);
+
+            // Scroll to results
+            document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // ========== MAP ==========
+        function initMap() {
+            if (map) return;
+            
+            map = L.map('thailandMap').setView([13.7563, 100.5018], 5);
+            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap'
+            }).addTo(map);
+        }
+
+        function updateMapMarkers(results) {
+            // Clear existing markers
+            markers.forEach(m => map.removeLayer(m));
+            markers = [];
+
+            // Add new markers
+            results.forEach((org, index) => {
+                const size = 30 - (index * 5);
+                const icon = L.divIcon({
+                    className: 'custom-marker',
+                    html: `<div style="
+                        width: ${size}px;
+                        height: ${size}px;
+                        background: ${org.color};
+                        border-radius: 50%;
+                        border: 3px solid white;
+                        box-shadow: 0 0 15px ${org.color};
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        font-size: ${size/2}px;
+                    ">${index + 1}</div>`,
+                    iconSize: [size, size]
+                });
+
+                const marker = L.marker([org.lat, org.lng], { icon })
+                    .addTo(map)
+                    .bindPopup(`
+                        <strong>${org.name}</strong><br>
+                        ${org.region}<br>
+                        Confidence: ${org.overall}%<br>
+                        Cases: ${org.caseCount}
+                    `);
+                markers.push(marker);
+            });
+
+            // Fit bounds
+            if (markers.length > 0) {
+                const group = L.featureGroup(markers);
+                map.fitBounds(group.getBounds().pad(0.2));
+            }
+        }
+
+        // ========== CHARTS ==========
+        function updateCharts(results) {
+            const ctx1 = document.getElementById('confidenceChart').getContext('2d');
+            const ctx2 = document.getElementById('chemicalChart').getContext('2d');
+
+            // Destroy existing charts
+            if (confidenceChart) confidenceChart.destroy();
+            if (chemicalChart) chemicalChart.destroy();
+
+            // Confidence Chart
+            confidenceChart = new Chart(ctx1, {
+                type: 'bar',
+                data: {
+                    labels: results.map(r => r.name.substring(0, 20) + '...'),
+                    datasets: [{
+                        label: 'Overall Confidence %',
+                        data: results.map(r => parseFloat(r.overall)),
+                        backgroundColor: results.map(r => r.color + '80'),
+                        borderColor: results.map(r => r.color),
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: { color: '#888' },
+                            grid: { color: 'rgba(255,255,255,0.1)' }
+                        },
+                        x: {
+                            ticks: { color: '#888' },
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+
+            // Chemical Chart (Radar)
+            chemicalChart = new Chart(ctx2, {
+                type: 'radar',
+                data: {
+                    labels: ['Meth', 'Caffeine', 'Lactose', 'MDMA'],
+                    datasets: [
+                        {
+                            label: 'Input Sample',
+                            data: [
+                                parseInt(document.getElementById('chemMeth').value),
+                                parseInt(document.getElementById('chemCaff').value),
+                                parseInt(document.getElementById('chemLact').value),
+                                parseInt(document.getElementById('chemMdma').value)
+                            ],
+                            backgroundColor: 'rgba(255, 0, 255, 0.2)',
+                            borderColor: '#ff00ff',
+                            borderWidth: 2
+                        },
+                        {
+                            label: results[0].name.substring(0, 15) + '...',
+                            data: [
+                                results[0].chemicalSignature.meth,
+                                results[0].chemicalSignature.caff,
+                                results[0].chemicalSignature.lact,
+                                results[0].chemicalSignature.mdma
+                            ],
+                            backgroundColor: 'rgba(0, 255, 255, 0.2)',
+                            borderColor: '#00ffff',
+                            borderWidth: 2
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: { color: '#888' }
+                        }
+                    },
+                    scales: {
+                        r: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: { color: '#888', backdropColor: 'transparent' },
+                            grid: { color: 'rgba(255,255,255,0.1)' },
+                            angleLines: { color: 'rgba(255,255,255,0.1)' },
+                            pointLabels: { color: '#888' }
+                        }
+                    }
+                }
+            });
+        }
+
+        // ========== ACTIONS ==========
+        function viewDetails(orgId) {
+            alert('📋 Opening details for Organization ID: ' + orgId + '\n\n(This would open a detailed case history modal)');
+        }
+
+        function exportReport(orgId) {
+            alert('📄 Exporting report for Organization ID: ' + orgId + '\n\n(This would generate a PDF report)');
+        }
+
+        // ========== INIT ==========
+        // Particles
+        const particles = document.getElementById('particles');
+        for (let i = 0; i < 30; i++) {
+            const p = document.createElement('div');
+            p.className = 'particle';
+            p.style.left = Math.random() * 100 + '%';
+            p.style.animationDelay = Math.random() * 20 + 's';
+            p.style.animationDuration = (15 + Math.random() * 15) + 's';
+            particles.appendChild(p);
+        }
+
+        // Load saved theme
+        const savedTheme = localStorage.getItem('dpi600-theme');
+        if (savedTheme) {
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            if (savedTheme === 'light') {
+                document.getElementById('themeIcon').textContent = '☀️';
+                document.getElementById('themeLabel').textContent = 'Light';
+            }
+        }
+    </script>
+</body>
+</html>

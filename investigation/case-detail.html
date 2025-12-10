@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="th" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DPI-600 Case Detail | Drug Profile AI System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --cyan: #00ffff;
+            --magenta: #ff00ff;
+            --purple: #8b5cf6;
+            --green: #00ff88;
+            --orange: #ff6600;
+            --yellow: #ffcc00;
+            --red: #ff4444;
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #050510;
+            --bg-secondary: #0a0a1a;
+            --bg-card: rgba(0, 0, 0, 0.4);
+            --bg-input: rgba(0, 0, 0, 0.5);
+            --text-primary: #ffffff;
+            --text-secondary: rgba(255, 255, 255, 0.7);
+            --text-muted: rgba(255, 255, 255, 0.5);
+            --border-color: rgba(0, 255, 255, 0.2);
+            --grid-color: rgba(0, 255, 255, 0.03);
+        }
+
+        [data-theme="light"] {
+            --bg-primary: #f0f4f8;
+            --bg-secondary: #ffffff;
+            --bg-card: rgba(255, 255, 255, 0.9);
+            --bg-input: rgba(255, 255, 255, 0.9);
+            --text-primary: #1a1a2e;
+            --text-secondary: rgba(26, 26, 46, 0.8);
+            --text-muted: rgba(26, 26, 46, 0.6);
+            --border-color: rgba(0, 150, 150, 0.3);
+            --grid-color: rgba(0, 100, 100, 0.08);
+            --cyan: #0099aa;
+            --magenta: #cc0088;
+            --green: #00aa66;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            transition: all 0.3s;
+        }
+
+        /* Background */
+        .bg-grid {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-image: 
+                linear-gradient(var(--grid-color) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+            background-size: 50px 50px;
+            z-index: -1;
+        }
+
+        /* Navigation */
+        .nav {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            background: rgba(5, 5, 16, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border-color);
+            padding: 15px 20px;
+        }
+
+        .nav-inner {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-brand {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            color: var(--cyan);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: transparent;
+            color: var(--text-secondary);
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn:hover {
+            border-color: var(--cyan);
+            color: var(--cyan);
+            background: rgba(0, 255, 255, 0.1);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--cyan), var(--magenta));
+            border: none;
+            color: #000;
+            font-weight: 600;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 255, 255, 0.4);
+        }
+
+        .theme-toggle {
+            padding: 8px 12px;
+            cursor: pointer;
+        }
+
+        /* Container */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+
+        /* Case Header */
+        .case-header {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 25px;
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            gap: 30px;
+            align-items: center;
+        }
+
+        @media (max-width: 900px) {
+            .case-header {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+        }
+
+        .case-logo {
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(135deg, var(--cyan), var(--magenta));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.3);
+        }
+
+        .case-info h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.8rem;
+            color: var(--cyan);
+            margin-bottom: 10px;
+        }
+
+        .case-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-top: 15px;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-secondary);
+        }
+
+        .case-status {
+            text-align: right;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 8px 20px;
+            border-radius: 25px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .status-open {
+            background: rgba(255, 200, 0, 0.2);
+            color: var(--yellow);
+            border: 1px solid var(--yellow);
+        }
+
+        .status-closed {
+            background: rgba(0, 255, 136, 0.2);
+            color: var(--green);
+            border: 1px solid var(--green);
+        }
+
+        .confidence-display {
+            margin-top: 15px;
+        }
+
+        .confidence-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .confidence-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2rem;
+            color: var(--green);
+        }
+
+        /* Grid Layout */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+        }
+
+        @media (max-width: 1000px) {
+            .main-grid { grid-template-columns: 1fr; }
+        }
+
+        /* Cards */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 15px;
+            padding: 25px;
+            transition: all 0.3s;
+        }
+
+        .card:hover {
+            border-color: var(--cyan);
+        }
+
+        .card-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1rem;
+            color: var(--cyan);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Evidence Images */
+        .evidence-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+        }
+
+        .evidence-item {
+            aspect-ratio: 1;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 2px solid var(--border-color);
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .evidence-item:hover {
+            border-color: var(--cyan);
+            transform: scale(1.05);
+        }
+
+        .evidence-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .evidence-item.primary::after {
+            content: '⭐ PRIMARY';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(transparent, rgba(0,0,0,0.8));
+            color: var(--yellow);
+            font-size: 0.7rem;
+            padding: 20px 5px 5px;
+            text-align: center;
+        }
+
+        /* Chemical Profile */
+        .chemical-bars {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .chem-item {
+            display: grid;
+            grid-template-columns: 120px 1fr 60px;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .chem-name {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .chem-bar {
+            height: 12px;
+            background: var(--bg-input);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .chem-fill {
+            height: 100%;
+            border-radius: 6px;
+            transition: width 1s ease;
+        }
+
+        .chem-fill.meth { background: linear-gradient(90deg, var(--magenta), var(--red)); }
+        .chem-fill.caff { background: linear-gradient(90deg, var(--cyan), var(--purple)); }
+        .chem-fill.lact { background: linear-gradient(90deg, var(--green), var(--cyan)); }
+        .chem-fill.mdma { background: linear-gradient(90deg, var(--orange), var(--yellow)); }
+
+        .chem-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1rem;
+            color: var(--cyan);
+            text-align: right;
+        }
+
+        /* Info List */
+        .info-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .info-label {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .info-value {
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        /* Map */
+        .map-container {
+            height: 250px;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+
+        #caseMap {
+            height: 100%;
+            width: 100%;
+        }
+
+        /* Organization Match */
+        .org-match {
+            background: rgba(0, 255, 136, 0.05);
+            border: 1px solid var(--green);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+        }
+
+        .org-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .org-rank {
+            font-size: 1.5rem;
+        }
+
+        .org-name {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.1rem;
+            color: var(--green);
+        }
+
+        .org-region {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+
+        .org-confidence {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.8rem;
+            color: var(--green);
+        }
+
+        .match-scores {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .score-box {
+            text-align: center;
+            padding: 10px;
+            background: var(--bg-card);
+            border-radius: 8px;
+        }
+
+        .score-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .score-num {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.1rem;
+            color: var(--cyan);
+        }
+
+        /* Timeline */
+        .timeline {
+            position: relative;
+            padding-left: 30px;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 10px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(180deg, var(--cyan), var(--magenta));
+        }
+
+        .timeline-item {
+            position: relative;
+            padding-bottom: 20px;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -24px;
+            top: 5px;
+            width: 10px;
+            height: 10px;
+            background: var(--cyan);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--cyan);
+        }
+
+        .timeline-date {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .timeline-content {
+            color: var(--text-secondary);
+            margin-top: 5px;
+        }
+
+        /* Full Width Section */
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        /* Related Cases */
+        .related-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+        }
+
+        .related-card {
+            padding: 15px;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .related-card:hover {
+            border-color: var(--cyan);
+            transform: translateY(-3px);
+        }
+
+        .related-case-num {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.9rem;
+            color: var(--cyan);
+        }
+
+        .related-info {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            margin-top: 8px;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 25px;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-top: 40px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .footer a {
+            color: var(--cyan);
+            text-decoration: none;
+        }
+
+        /* Image Modal */
+        .image-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .image-modal.visible {
+            display: flex;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            font-size: 2rem;
+            color: white;
+            cursor: pointer;
+        }
+
+        .modal-image {
+            max-width: 90%;
+            max-height: 90%;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-grid"></div>
+
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="nav-inner">
+            <div class="nav-brand">
+                🔬 DPI-600 Case Detail
+            </div>
+            <div class="nav-actions">
+                <button class="btn" onclick="window.history.back()">
+                    ← Back
+                </button>
+                <button class="btn" onclick="printCase()">
+                    🖨️ Print
+                </button>
+                <button class="btn btn-primary" onclick="exportPDF()">
+                    📄 Export PDF
+                </button>
+                <div class="btn theme-toggle" onclick="toggleTheme()">
+                    <span id="themeIcon">🌙</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Case Header -->
+        <div class="case-header">
+            <div class="case-logo" id="caseLogo">🦁</div>
+            <div class="case-info">
+                <h1 id="caseNumber">DPI-2568-000001</h1>
+                <p style="color: var(--text-secondary);" id="caseDesc">Methamphetamine seizure - Lion logo detected</p>
+                <div class="case-meta">
+                    <div class="meta-item">📅 <span id="caseDate">1 ธันวาคม 2568</span></div>
+                    <div class="meta-item">📍 <span id="caseLocation">เชียงราย, ภาคเหนือ</span></div>
+                    <div class="meta-item">💊 <span id="caseQuantity">50,000 เม็ด</span></div>
+                    <div class="meta-item">👮 <span id="caseUnit">ตำรวจภูธรจังหวัดเชียงราย</span></div>
+                </div>
+            </div>
+            <div class="case-status">
+                <span class="status-badge status-closed" id="caseStatus">CLOSED</span>
+                <div class="confidence-display">
+                    <div class="confidence-label">AI Confidence</div>
+                    <div class="confidence-value" id="aiConfidence">97.5%</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Grid -->
+        <div class="main-grid">
+            <!-- Evidence Images -->
+            <div class="card">
+                <div class="card-title">📷 EVIDENCE IMAGES</div>
+                <div class="evidence-grid" id="evidenceGrid">
+                    <div class="evidence-item primary" onclick="showImage(this)">
+                        <img src="https://via.placeholder.com/300x300/1a1a2e/00ffff?text=DRUG+SAMPLE" alt="Evidence 1">
+                    </div>
+                    <div class="evidence-item" onclick="showImage(this)">
+                        <img src="https://via.placeholder.com/300x300/1a1a2e/ff00ff?text=SCENE" alt="Evidence 2">
+                    </div>
+                    <div class="evidence-item" onclick="showImage(this)">
+                        <img src="https://via.placeholder.com/300x300/1a1a2e/00ff88?text=PACKAGING" alt="Evidence 3">
+                    </div>
+                    <div class="evidence-item" onclick="showImage(this)">
+                        <img src="https://via.placeholder.com/300x300/1a1a2e/ffcc00?text=SCALE" alt="Evidence 4">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chemical Profile -->
+            <div class="card">
+                <div class="card-title">🧪 CHEMICAL ANALYSIS</div>
+                <div class="chemical-bars">
+                    <div class="chem-item">
+                        <span class="chem-name">Methamphetamine</span>
+                        <div class="chem-bar">
+                            <div class="chem-fill meth" style="width: 86%"></div>
+                        </div>
+                        <span class="chem-value">86%</span>
+                    </div>
+                    <div class="chem-item">
+                        <span class="chem-name">Caffeine</span>
+                        <div class="chem-bar">
+                            <div class="chem-fill caff" style="width: 38%"></div>
+                        </div>
+                        <span class="chem-value">38%</span>
+                    </div>
+                    <div class="chem-item">
+                        <span class="chem-name">Lactose</span>
+                        <div class="chem-bar">
+                            <div class="chem-fill lact" style="width: 21%"></div>
+                        </div>
+                        <span class="chem-value">21%</span>
+                    </div>
+                    <div class="chem-item">
+                        <span class="chem-name">MDMA</span>
+                        <div class="chem-bar">
+                            <div class="chem-fill mdma" style="width: 4%"></div>
+                        </div>
+                        <span class="chem-value">4%</span>
+                    </div>
+                </div>
+                <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid var(--border-color);">
+                    <div class="info-item">
+                        <span class="info-label">Lab Reference</span>
+                        <span class="info-value">LAB-2568-CR-0512</span>
+                    </div>
+                    <div class="info-item" style="margin-top: 10px;">
+                        <span class="info-label">Analysis Date</span>
+                        <span class="info-value">3 ธันวาคม 2568</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Case Details -->
+            <div class="card">
+                <div class="card-title">📋 CASE DETAILS</div>
+                <div class="info-list">
+                    <div class="info-item">
+                        <span class="info-label">Drug Type</span>
+                        <span class="info-value">Methamphetamine (ยาบ้า)</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Detected Logo</span>
+                        <span class="info-value">🦁 Lion (สิงโต)</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Quantity</span>
+                        <span class="info-value">50,000 เม็ด</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Weight</span>
+                        <span class="info-value">4.5 กก.</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Est. Value</span>
+                        <span class="info-value">฿5,000,000</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Suspects</span>
+                        <span class="info-value">2 คน</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Lead Officer</span>
+                        <span class="info-value">พ.ต.ท.สมชาย รักดี</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">F-NET ID</span>
+                        <span class="info-value">FNET-2568-12345</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Location Map -->
+            <div class="card">
+                <div class="card-title">📍 SEIZURE LOCATION</div>
+                <div class="map-container">
+                    <div id="caseMap"></div>
+                </div>
+                <div class="info-list" style="margin-top: 15px;">
+                    <div class="info-item">
+                        <span class="info-label">Province</span>
+                        <span class="info-value">เชียงราย</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">District</span>
+                        <span class="info-value">แม่สาย</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">GPS</span>
+                        <span class="info-value">20.4280°N, 99.8766°E</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Organization Match -->
+            <div class="card full-width">
+                <div class="card-title">🎯 ORGANIZATION MATCHES</div>
+                
+                <div class="org-match">
+                    <div class="org-header">
+                        <div>
+                            <span class="org-rank">🥇</span>
+                            <span class="org-name">กลุ่มเครือข่าย "สิงโตทอง"</span>
+                            <div class="org-region">📍 ภาคเหนือ (เชียงราย, เชียงใหม่, แม่ฮ่องสอน)</div>
+                        </div>
+                        <div class="org-confidence">95.5%</div>
+                    </div>
+                    <div class="match-scores">
+                        <div class="score-box">
+                            <div class="score-label">📷 Logo Match</div>
+                            <div class="score-num">97.5%</div>
+                        </div>
+                        <div class="score-box">
+                            <div class="score-label">🧪 Chemical Match</div>
+                            <div class="score-num">94.2%</div>
+                        </div>
+                        <div class="score-box">
+                            <div class="score-label">📍 Geo Match</div>
+                            <div class="score-num">95.0%</div>
+                        </div>
+                    </div>
+                    <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--border-color);">
+                        <span style="color: var(--text-muted);">📋 Related Cases: 47 cases (2566-2568) | Total Seizure: 2,350,000 เม็ด</span>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="org-match" style="background: rgba(0, 255, 255, 0.05); border-color: var(--cyan);">
+                        <div class="org-header">
+                            <div>
+                                <span class="org-rank">🥈</span>
+                                <span class="org-name" style="color: var(--cyan);">กลุ่มเครือข่าย "WY International"</span>
+                                <div class="org-region">📍 ภาคอีสาน</div>
+                            </div>
+                            <div class="org-confidence" style="color: var(--cyan);">48.8%</div>
+                        </div>
+                    </div>
+                    <div class="org-match" style="background: rgba(255, 102, 0, 0.05); border-color: var(--orange);">
+                        <div class="org-header">
+                            <div>
+                                <span class="org-rank">🥉</span>
+                                <span class="org-name" style="color: var(--orange);">กลุ่มเครือข่าย "ม้าเหล็ก"</span>
+                                <div class="org-region">📍 ภาคตะวันตก</div>
+                            </div>
+                            <div class="org-confidence" style="color: var(--orange);">42.3%</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Case Timeline -->
+            <div class="card">
+                <div class="card-title">📅 CASE TIMELINE</div>
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-date">1 ธ.ค. 2568 - 14:30</div>
+                        <div class="timeline-content">🚔 ยึดของกลางที่ด่าน อ.แม่สาย</div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-date">1 ธ.ค. 2568 - 16:00</div>
+                        <div class="timeline-content">📷 ถ่ายภาพหลักฐานและบันทึกข้อมูล</div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-date">2 ธ.ค. 2568 - 09:00</div>
+                        <div class="timeline-content">🧪 ส่งตรวจสารเคมีที่ศูนย์พิสูจน์หลักฐาน 3</div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-date">3 ธ.ค. 2568 - 14:00</div>
+                        <div class="timeline-content">📊 ได้ผลตรวจทางเคมี - Meth 86%</div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-date">3 ธ.ค. 2568 - 15:30</div>
+                        <div class="timeline-content">🧠 AI วิเคราะห์และจับคู่กลุ่มเครือข่าย</div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-date">5 ธ.ค. 2568 - 10:00</div>
+                        <div class="timeline-content">✅ นักวิเคราะห์ยืนยันผลการจับคู่</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Related Cases -->
+            <div class="card">
+                <div class="card-title">🔗 RELATED CASES</div>
+                <div class="related-grid">
+                    <div class="related-card">
+                        <div class="related-case-num">DPI-2568-000004</div>
+                        <div class="related-info">📍 เชียงใหม่ | 🦁 Lion | 80,000 เม็ด</div>
+                        <div class="related-info">📅 7 ธ.ค. 2568 | Match: 94.4%</div>
+                    </div>
+                    <div class="related-card">
+                        <div class="related-case-num">DPI-2567-000892</div>
+                        <div class="related-info">📍 เชียงราย | 🦁 Lion | 35,000 เม็ด</div>
+                        <div class="related-info">📅 15 พ.ย. 2567 | Match: 91.2%</div>
+                    </div>
+                    <div class="related-card">
+                        <div class="related-case-num">DPI-2567-000756</div>
+                        <div class="related-info">📍 แม่ฮ่องสอน | 🐯 Tiger | 42,000 เม็ด</div>
+                        <div class="related-info">📅 28 ต.ค. 2567 | Match: 88.7%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        © 2025 <a href="#">Autthapol Saiyat (Boy)</a> - Technology & AI Program Director | 
+        📱 085-070-9938 | 💬 LINE: boy_saiyat
+    </footer>
+
+    <!-- Image Modal -->
+    <div class="image-modal" id="imageModal">
+        <span class="modal-close" onclick="closeImage()">×</span>
+        <img class="modal-image" id="modalImage" src="" alt="Full Image">
+    </div>
+
+    <script>
+        // Initialize Map
+        const map = L.map('caseMap').setView([20.428, 99.877], 10);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap'
+        }).addTo(map);
+
+        // Add marker
+        const marker = L.marker([20.428, 99.877]).addTo(map)
+            .bindPopup('<strong>จุดยึดของกลาง</strong><br>อ.แม่สาย จ.เชียงราย')
+            .openPopup();
+
+        // Theme Toggle
+        function toggleTheme() {
+            const html = document.documentElement;
+            const newTheme = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            document.getElementById('themeIcon').textContent = newTheme === 'light' ? '☀️' : '🌙';
+            localStorage.setItem('dpi600-theme', newTheme);
+        }
+
+        // Image Modal
+        function showImage(el) {
+            const img = el.querySelector('img');
+            document.getElementById('modalImage').src = img.src;
+            document.getElementById('imageModal').classList.add('visible');
+        }
+
+        function closeImage() {
+            document.getElementById('imageModal').classList.remove('visible');
+        }
+
+        // Close modal on click outside
+        document.getElementById('imageModal').addEventListener('click', function(e) {
+            if (e.target === this) closeImage();
+        });
+
+        // Print
+        function printCase() {
+            window.print();
+        }
+
+        // Export PDF (placeholder)
+        function exportPDF() {
+            alert('📄 Generating PDF Report...\n\nCase: DPI-2568-000001\nThis would generate a comprehensive PDF report.');
+        }
+
+        // Load saved theme
+        const savedTheme = localStorage.getItem('dpi600-theme');
+        if (savedTheme) {
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            document.getElementById('themeIcon').textContent = savedTheme === 'light' ? '☀️' : '🌙';
+        }
+    </script>
+</body>
+</html>

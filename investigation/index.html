@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="th" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DPI-600 Investigation Center | เจ้าหน้าที่สืบสวน</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👮</text></svg>">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --cyan: #00ffff; --magenta: #ff00ff; --green: #00ff88; --purple: #8b5cf6; }
+        [data-theme="dark"] {
+            --bg-primary: #050510; --bg-card: rgba(0, 0, 0, 0.5);
+            --text-primary: #fff; --text-secondary: rgba(255,255,255,0.8);
+            --text-muted: rgba(255,255,255,0.5); --border-color: rgba(0,255,255,0.2);
+        }
+        [data-theme="light"] {
+            --bg-primary: #f0f4f8; --bg-card: rgba(255,255,255,0.9);
+            --text-primary: #1a1a2e; --text-secondary: rgba(26,26,46,0.8);
+            --text-muted: rgba(26,26,46,0.6); --border-color: rgba(0,150,150,0.3);
+            --cyan: #0099aa; --magenta: #cc0088;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Rajdhani', sans-serif; background: var(--bg-primary); color: var(--text-primary); min-height: 100vh; }
+        .bg-grid { position: fixed; inset: 0; background-image: linear-gradient(rgba(0,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0,255,255,0.03) 1px, transparent 1px); background-size: 50px 50px; z-index: -1; }
+        .theme-toggle { position: fixed; top: 20px; right: 20px; z-index: 50; padding: 12px 18px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 30px; cursor: pointer; font-size: 1.2rem; }
+        .header { text-align: center; padding: 50px 20px 30px; }
+        .header-badge { display: inline-block; padding: 6px 18px; background: var(--cyan); border-radius: 20px; color: #000; font-family: 'Orbitron', sans-serif; font-size: 0.75rem; font-weight: 700; margin-bottom: 15px; }
+        .header-icon { font-size: 4rem; margin-bottom: 15px; }
+        .header-title { font-family: 'Orbitron', sans-serif; font-size: 2rem; color: var(--cyan); margin-bottom: 10px; }
+        .header-subtitle { color: var(--text-secondary); font-size: 1.1rem; }
+        .container { max-width: 1000px; margin: 0 auto; padding: 20px; }
+        .menu-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 25px; margin-bottom: 40px; }
+        @media (max-width: 700px) { .menu-grid { grid-template-columns: 1fr; } }
+        .menu-card { background: var(--bg-card); border: 2px solid var(--border-color); border-radius: 20px; padding: 35px 25px; text-align: center; cursor: pointer; transition: all 0.3s; text-decoration: none; display: block; }
+        .menu-card:hover { transform: translateY(-8px); border-color: var(--cyan); box-shadow: 0 20px 40px rgba(0,255,255,0.2); }
+        .menu-icon { font-size: 3.5rem; margin-bottom: 15px; display: block; }
+        .menu-title { font-family: 'Orbitron', sans-serif; font-size: 1.2rem; color: var(--text-primary); margin-bottom: 10px; }
+        .menu-desc { color: var(--text-muted); font-size: 0.95rem; line-height: 1.5; }
+        .back-btn { position: fixed; bottom: 30px; left: 30px; padding: 15px 25px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 30px; color: var(--text-secondary); text-decoration: none; transition: all 0.3s; display: flex; align-items: center; gap: 10px; }
+        .back-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+        .footer { text-align: center; padding: 30px 20px; border-top: 1px solid var(--border-color); color: var(--text-muted); font-size: 0.9rem; }
+        .footer a { color: var(--cyan); text-decoration: none; }
+    </style>
+</head>
+<body>
+    <div class="bg-grid"></div>
+    <div class="theme-toggle" onclick="toggleTheme()"><span id="themeIcon">🌙</span></div>
+
+    <header class="header">
+        <div class="header-badge">INVESTIGATION</div>
+        <div class="header-icon">👮</div>
+        <h1 class="header-title">Investigation Center</h1>
+        <p class="header-subtitle">ระบบสำหรับเจ้าหน้าที่สืบสวน</p>
+    </header>
+
+    <div class="container">
+        <div class="menu-grid">
+            <a href="center.html" class="menu-card">
+                <span class="menu-icon">🔍</span>
+                <div class="menu-title">Investigation Center</div>
+                <div class="menu-desc">วิเคราะห์คดียาเสพติด<br>ค้นหา Organization Match</div>
+            </a>
+            <a href="case-detail.html" class="menu-card">
+                <span class="menu-icon">📋</span>
+                <div class="menu-title">Case Detail</div>
+                <div class="menu-desc">ดูรายละเอียดคดี<br>หลักฐาน สารเคมี Location</div>
+            </a>
+            <a href="timeline.html" class="menu-card">
+                <span class="menu-icon">📅</span>
+                <div class="menu-title">Case Timeline</div>
+                <div class="menu-desc">ประวัติคดีทั้งหมด<br>Filter, Stats, Charts</div>
+            </a>
+            <a href="profile-manager.html" class="menu-card">
+                <span class="menu-icon">🆔</span>
+                <div class="menu-title">Profile Manager</div>
+                <div class="menu-desc">จัดการ Drug Profiles<br>ดู/แก้ไข/เชื่อมโยงคดี</div>
+            </a>
+            <a href="report.html" class="menu-card">
+                <span class="menu-icon">📄</span>
+                <div class="menu-title">Generate Report</div>
+                <div class="menu-desc">สร้างรายงาน PDF<br>พิมพ์ได้ทันที</div>
+            </a>
+        </div>
+    </div>
+
+    <a href="../" class="back-btn">← กลับหน้าหลัก</a>
+
+    <footer class="footer">
+        <p>DPI-600 Drug Profile Intelligence System | <a href="#">Saengvith Science Co., Ltd.</a></p>
+    </footer>
+
+    <script>
+        function toggleTheme() {
+            const html = document.documentElement;
+            const newTheme = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            document.getElementById('themeIcon').textContent = newTheme === 'light' ? '☀️' : '🌙';
+            localStorage.setItem('dpi600-theme', newTheme);
+        }
+        const savedTheme = localStorage.getItem('dpi600-theme');
+        if (savedTheme) { document.documentElement.setAttribute('data-theme', savedTheme); document.getElementById('themeIcon').textContent = savedTheme === 'light' ? '☀️' : '🌙'; }
+    </script>
+</body>
+</html>
