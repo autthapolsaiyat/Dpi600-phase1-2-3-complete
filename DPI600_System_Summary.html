@@ -1,0 +1,1335 @@
+<!DOCTYPE html>
+<html lang="th" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DPI-600 System Summary | สรุปภาพรวมระบบ</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📋</text></svg>">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@300;400;500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --cyan: #00ffff;
+            --magenta: #ff00ff;
+            --purple: #8b5cf6;
+            --green: #00ff88;
+            --orange: #ff9500;
+            --gold: #ffd700;
+            --red: #ff4444;
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #050510;
+            --bg-secondary: #0a0a1a;
+            --bg-card: rgba(10, 10, 30, 0.8);
+            --text-primary: #ffffff;
+            --text-secondary: rgba(255, 255, 255, 0.85);
+            --text-muted: rgba(255, 255, 255, 0.5);
+            --border-color: rgba(0, 255, 255, 0.2);
+        }
+
+        [data-theme="light"] {
+            --bg-primary: #f5f7fa;
+            --bg-secondary: #ffffff;
+            --bg-card: rgba(255, 255, 255, 0.95);
+            --text-primary: #1a1a2e;
+            --text-secondary: rgba(26, 26, 46, 0.85);
+            --text-muted: rgba(26, 26, 46, 0.6);
+            --border-color: rgba(0, 100, 100, 0.2);
+            --cyan: #0088aa;
+            --magenta: #aa0088;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Sarabun', 'Rajdhani', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.7;
+        }
+
+        .bg-grid {
+            position: fixed;
+            inset: 0;
+            background-image: 
+                linear-gradient(rgba(0,255,255,0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0,255,255,0.02) 1px, transparent 1px);
+            background-size: 60px 60px;
+            z-index: -1;
+        }
+
+        /* Theme Toggle */
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+            padding: 12px 18px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 1.2rem;
+        }
+
+        /* Print Button */
+        .print-btn {
+            position: fixed;
+            top: 20px;
+            right: 90px;
+            z-index: 100;
+            padding: 12px 20px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .print-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+
+        /* Header */
+        .header {
+            text-align: center;
+            padding: 60px 20px 50px;
+            background: linear-gradient(180deg, rgba(0,255,255,0.05) 0%, transparent 100%);
+        }
+
+        .header-badge {
+            display: inline-block;
+            padding: 8px 25px;
+            background: linear-gradient(135deg, var(--cyan), var(--magenta));
+            border-radius: 25px;
+            color: #000;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            margin-bottom: 20px;
+        }
+
+        .header-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 3rem;
+            background: linear-gradient(135deg, var(--cyan), var(--magenta));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 15px;
+        }
+
+        .header-subtitle {
+            color: var(--text-secondary);
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+        }
+
+        .header-org {
+            color: var(--text-muted);
+            font-size: 1rem;
+        }
+
+        /* Container */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Section */
+        .section {
+            margin-bottom: 60px;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .section-number {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--cyan), var(--magenta));
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #000;
+        }
+
+        .section-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+            color: var(--cyan);
+        }
+
+        .section-title-en {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.1rem;
+            color: var(--cyan);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Architecture Diagram */
+        .arch-diagram {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 900px) {
+            .arch-diagram { grid-template-columns: 1fr; }
+        }
+
+        .arch-layer {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+        }
+
+        .arch-layer-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .arch-items {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .arch-item {
+            padding: 12px 15px;
+            background: rgba(0, 255, 255, 0.1);
+            border: 1px solid rgba(0, 255, 255, 0.2);
+            border-radius: 10px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .arch-item.highlight {
+            background: linear-gradient(135deg, rgba(0,255,255,0.2), rgba(255,0,255,0.2));
+            border-color: var(--cyan);
+        }
+
+        /* Tech Stack */
+        .tech-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+
+        @media (max-width: 800px) {
+            .tech-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        .tech-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px 15px;
+            text-align: center;
+        }
+
+        .tech-icon { font-size: 2rem; margin-bottom: 10px; }
+        .tech-name { font-weight: 600; color: var(--text-primary); margin-bottom: 5px; }
+        .tech-desc { font-size: 0.8rem; color: var(--text-muted); }
+
+        /* UI Screens Grid */
+        .ui-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        @media (max-width: 700px) {
+            .ui-grid { grid-template-columns: 1fr; }
+        }
+
+        .ui-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 15px;
+            padding: 25px;
+        }
+
+        .ui-card-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .ui-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .ui-icon.cyan { background: rgba(0,255,255,0.2); }
+        .ui-icon.green { background: rgba(0,255,136,0.2); }
+        .ui-icon.magenta { background: rgba(255,0,255,0.2); }
+        .ui-icon.purple { background: rgba(139,92,246,0.2); }
+        .ui-icon.gold { background: rgba(255,215,0,0.2); }
+
+        .ui-title { font-weight: 600; color: var(--text-primary); }
+        .ui-subtitle { font-size: 0.85rem; color: var(--text-muted); }
+
+        .ui-features {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .ui-feature {
+            padding: 5px 12px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        /* Workflow */
+        .workflow-container {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+
+        .workflow-step {
+            display: flex;
+            gap: 20px;
+            position: relative;
+        }
+
+        .workflow-line {
+            width: 4px;
+            background: linear-gradient(180deg, var(--cyan), var(--magenta));
+            margin-left: 23px;
+            position: absolute;
+            top: 50px;
+            bottom: -20px;
+        }
+
+        .workflow-step:last-child .workflow-line { display: none; }
+
+        .workflow-number {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--cyan), var(--magenta));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #000;
+            flex-shrink: 0;
+            z-index: 1;
+        }
+
+        .workflow-content {
+            flex: 1;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 15px;
+            padding: 20px 25px;
+            margin-bottom: 20px;
+        }
+
+        .workflow-title {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .workflow-desc { color: var(--text-muted); font-size: 0.95rem; }
+
+        /* Roadmap */
+        .roadmap-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        @media (max-width: 900px) {
+            .roadmap-grid { grid-template-columns: 1fr; }
+        }
+
+        .roadmap-card {
+            background: var(--bg-card);
+            border: 2px solid var(--border-color);
+            border-radius: 20px;
+            padding: 25px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .roadmap-card.pending {
+            border-color: var(--orange);
+        }
+
+        .roadmap-card.pending::before {
+            content: '⏳ รอดำเนินการ';
+            position: absolute;
+            top: 15px;
+            right: -35px;
+            background: var(--orange);
+            color: #000;
+            padding: 5px 40px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            transform: rotate(45deg);
+        }
+
+        .roadmap-month {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.85rem;
+            color: var(--cyan);
+            margin-bottom: 10px;
+        }
+
+        .roadmap-title {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+
+        .roadmap-tasks {
+            list-style: none;
+        }
+
+        .roadmap-task {
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .roadmap-task:last-child { border-bottom: none; }
+
+        .task-icon { font-size: 0.8rem; }
+
+        /* Cost Table */
+        .cost-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .cost-table th,
+        .cost-table td {
+            padding: 15px 20px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .cost-table th {
+            background: rgba(0, 255, 255, 0.1);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.85rem;
+            color: var(--cyan);
+            text-transform: uppercase;
+        }
+
+        .cost-table td {
+            color: var(--text-secondary);
+        }
+
+        .cost-table tr:hover td {
+            background: rgba(0, 255, 255, 0.05);
+        }
+
+        .cost-amount {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--text-primary);
+            text-align: right;
+        }
+
+        .cost-total {
+            background: linear-gradient(135deg, rgba(0,255,255,0.1), rgba(255,0,255,0.1)) !important;
+        }
+
+        .cost-total td {
+            font-weight: 700;
+            color: var(--cyan) !important;
+            font-size: 1.1rem;
+        }
+
+        /* Summary Stats */
+        .summary-stats {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 900px) {
+            .summary-stats { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        .summary-stat {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 15px;
+            padding: 25px 15px;
+            text-align: center;
+        }
+
+        .summary-stat-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.8rem;
+            color: var(--cyan);
+            margin-bottom: 5px;
+        }
+
+        .summary-stat-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 50px 20px;
+            border-top: 1px solid var(--border-color);
+            margin-top: 50px;
+        }
+
+        .footer-brand {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--cyan);
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+
+        .footer-company { color: var(--text-secondary); margin-bottom: 10px; }
+        .footer-contact { color: var(--text-muted); font-size: 0.9rem; }
+        .footer a { color: var(--cyan); text-decoration: none; }
+
+        /* Print Styles */
+        @media print {
+            body { background: white; color: black; }
+            .bg-grid, .theme-toggle, .print-btn { display: none; }
+            .card, .arch-layer, .ui-card, .workflow-content, .roadmap-card, .summary-stat {
+                background: #f8f8f8;
+                border-color: #ddd;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .section { page-break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-grid"></div>
+
+    <div class="theme-toggle" onclick="toggleTheme()">
+        <span id="themeIcon">🌙</span>
+    </div>
+
+    <div class="print-btn" onclick="window.print()">
+        🖨️ Print PDF
+    </div>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="header-badge">SYSTEM SUMMARY</div>
+        <h1 class="header-title">DPI-600</h1>
+        <p class="header-subtitle">Drug Profile Intelligence System</p>
+        <p class="header-org">🏛️ สำนักงานพิสูจน์หลักฐานตำรวจ | Office of Police Forensic Science</p>
+    </header>
+
+    <div class="container">
+        <!-- Summary Stats -->
+        <div class="summary-stats">
+            <div class="summary-stat">
+                <div class="summary-stat-value">49.5M</div>
+                <div class="summary-stat-label">มูลค่าโครงการ (บาท)</div>
+            </div>
+            <div class="summary-stat">
+                <div class="summary-stat-value">11</div>
+                <div class="summary-stat-label">ศูนย์พิสูจน์หลักฐาน</div>
+            </div>
+            <div class="summary-stat">
+                <div class="summary-stat-value">3</div>
+                <div class="summary-stat-label">ระยะเวลา (ปี)</div>
+            </div>
+            <div class="summary-stat">
+                <div class="summary-stat-value">98.9%</div>
+                <div class="summary-stat-label">AI Accuracy</div>
+            </div>
+            <div class="summary-stat">
+                <div class="summary-stat-value">6</div>
+                <div class="summary-stat-label">เดือน (Phase 1)</div>
+            </div>
+        </div>
+
+        <!-- Section 1: System Architecture -->
+        <section class="section">
+            <div class="section-header">
+                <div class="section-number">1</div>
+                <div>
+                    <div class="section-title">System Architecture</div>
+                    <div class="section-title-en">สถาปัตยกรรมระบบ</div>
+                </div>
+            </div>
+
+            <div class="arch-diagram">
+                <div class="arch-layer">
+                    <div class="arch-layer-title">🖥️ Presentation Layer</div>
+                    <div class="arch-items">
+                        <div class="arch-item">Web Portal (HTML/CSS/JS)</div>
+                        <div class="arch-item">Mobile PWA (QRGrid)</div>
+                        <div class="arch-item">Dashboard & Reports</div>
+                        <div class="arch-item">Executive Presentation</div>
+                    </div>
+                </div>
+                <div class="arch-layer">
+                    <div class="arch-layer-title">⚙️ Application Layer</div>
+                    <div class="arch-items">
+                        <div class="arch-item highlight">AI Engine (Vision Transformer)</div>
+                        <div class="arch-item highlight">Graph Neural Network</div>
+                        <div class="arch-item">Chemical Analysis Module</div>
+                        <div class="arch-item">REST API (OpenAPI 3.1)</div>
+                    </div>
+                </div>
+                <div class="arch-layer">
+                    <div class="arch-layer-title">🗄️ Data Layer</div>
+                    <div class="arch-items">
+                        <div class="arch-item">PostgreSQL + PostGIS</div>
+                        <div class="arch-item">F-NET Integration</div>
+                        <div class="arch-item">Image Storage (Blob)</div>
+                        <div class="arch-item">Model Registry (ONNX)</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">🔧 Technology Stack</div>
+                <div class="tech-grid">
+                    <div class="tech-item">
+                        <div class="tech-icon">🐍</div>
+                        <div class="tech-name">Python</div>
+                        <div class="tech-desc">AI/ML Backend</div>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-icon">🔥</div>
+                        <div class="tech-name">PyTorch</div>
+                        <div class="tech-desc">Vision Transformer</div>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-icon">🐘</div>
+                        <div class="tech-name">PostgreSQL</div>
+                        <div class="tech-desc">Database + PostGIS</div>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-icon">🐳</div>
+                        <div class="tech-name">Docker</div>
+                        <div class="tech-desc">Containerization</div>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-icon">☁️</div>
+                        <div class="tech-name">Azure</div>
+                        <div class="tech-desc">Cloud Platform</div>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-icon">📊</div>
+                        <div class="tech-name">Streamlit</div>
+                        <div class="tech-desc">Training Dashboard</div>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-icon">🗺️</div>
+                        <div class="tech-name">Leaflet</div>
+                        <div class="tech-desc">Interactive Maps</div>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-icon">📈</div>
+                        <div class="tech-name">Chart.js</div>
+                        <div class="tech-desc">Data Visualization</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: UI Screens -->
+        <section class="section">
+            <div class="section-header">
+                <div class="section-number">2</div>
+                <div>
+                    <div class="section-title">UI Screens</div>
+                    <div class="section-title-en">หน้าจอผู้ใช้งาน (20+ หน้า)</div>
+                </div>
+            </div>
+
+            <div class="ui-grid">
+                <div class="ui-card">
+                    <div class="ui-card-header">
+                        <div class="ui-icon cyan">👮</div>
+                        <div>
+                            <div class="ui-title">Investigation Module</div>
+                            <div class="ui-subtitle">ระบบสำหรับเจ้าหน้าที่สืบสวน</div>
+                        </div>
+                    </div>
+                    <div class="ui-features">
+                        <span class="ui-feature">🔍 Investigation Center</span>
+                        <span class="ui-feature">📋 Case Detail</span>
+                        <span class="ui-feature">📅 Timeline</span>
+                        <span class="ui-feature">🆔 Profile Manager</span>
+                        <span class="ui-feature">📄 PDF Report</span>
+                    </div>
+                </div>
+
+                <div class="ui-card">
+                    <div class="ui-card-header">
+                        <div class="ui-icon green">📱</div>
+                        <div>
+                            <div class="ui-title">Field Operations</div>
+                            <div class="ui-subtitle">ระบบสำหรับภาคสนาม</div>
+                        </div>
+                    </div>
+                    <div class="ui-features">
+                        <span class="ui-feature">📷 Mobile Scanner</span>
+                        <span class="ui-feature">📱 QRGrid PWA</span>
+                        <span class="ui-feature">📍 GPS Tracking</span>
+                        <span class="ui-feature">📤 Image Upload</span>
+                    </div>
+                </div>
+
+                <div class="ui-card">
+                    <div class="ui-card-header">
+                        <div class="ui-icon magenta">🧪</div>
+                        <div>
+                            <div class="ui-title">Forensic Lab</div>
+                            <div class="ui-subtitle">ระบบสำหรับพิสูจน์หลักฐาน</div>
+                        </div>
+                    </div>
+                    <div class="ui-features">
+                        <span class="ui-feature">🔬 Pill Fingerprint Matching</span>
+                        <span class="ui-feature">🏷️ Labeling Studio</span>
+                        <span class="ui-feature">📊 Chemical Analysis</span>
+                        <span class="ui-feature">🆔 Profile Creation</span>
+                    </div>
+                </div>
+
+                <div class="ui-card">
+                    <div class="ui-card-header">
+                        <div class="ui-icon purple">🤖</div>
+                        <div>
+                            <div class="ui-title">AI Admin</div>
+                            <div class="ui-subtitle">ระบบจัดการ AI</div>
+                        </div>
+                    </div>
+                    <div class="ui-features">
+                        <span class="ui-feature">🧠 Training Dashboard</span>
+                        <span class="ui-feature">🎯 Inference UI</span>
+                        <span class="ui-feature">📈 Performance Monitor</span>
+                        <span class="ui-feature">📝 System Logs</span>
+                    </div>
+                </div>
+
+                <div class="ui-card">
+                    <div class="ui-card-header">
+                        <div class="ui-icon gold">👔</div>
+                        <div>
+                            <div class="ui-title">Executive Portal</div>
+                            <div class="ui-subtitle">ระบบสำหรับผู้บริหาร</div>
+                        </div>
+                    </div>
+                    <div class="ui-features">
+                        <span class="ui-feature">📊 Presentation</span>
+                        <span class="ui-feature">💰 Quotation</span>
+                        <span class="ui-feature">📈 Dashboard</span>
+                        <span class="ui-feature">📋 Reports</span>
+                    </div>
+                </div>
+
+                <div class="ui-card">
+                    <div class="ui-card-header">
+                        <div class="ui-icon cyan">🔐</div>
+                        <div>
+                            <div class="ui-title">Security & Auth</div>
+                            <div class="ui-subtitle">ระบบความปลอดภัย</div>
+                        </div>
+                    </div>
+                    <div class="ui-features">
+                        <span class="ui-feature">🔑 Login System</span>
+                        <span class="ui-feature">👥 Role-based Access</span>
+                        <span class="ui-feature">🌙 Dark/Light Theme</span>
+                        <span class="ui-feature">📱 Responsive Design</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Operation Workflow -->
+        <section class="section">
+            <div class="section-header">
+                <div class="section-number">3</div>
+                <div>
+                    <div class="section-title">Operation Workflow</div>
+                    <div class="section-title-en">ขั้นตอนการทำงาน</div>
+                </div>
+            </div>
+
+            <div class="workflow-container">
+                <div class="workflow-step">
+                    <div class="workflow-number">1</div>
+                    <div class="workflow-line"></div>
+                    <div class="workflow-content">
+                        <div class="workflow-title">📷 Evidence Collection</div>
+                        <div class="workflow-desc">เจ้าหน้าที่ภาคสนามถ่ายภาพหลักฐานยาเสพติด พร้อมบันทึกพิกัด GPS ผ่าน Mobile Scanner หรือ QRGrid PWA ตามมาตรฐานการถ่ายภาพจาก พิสูจน์หลักฐาน</div>
+                    </div>
+                </div>
+
+                <div class="workflow-step">
+                    <div class="workflow-number">2</div>
+                    <div class="workflow-line"></div>
+                    <div class="workflow-content">
+                        <div class="workflow-title">🧪 Lab Analysis</div>
+                        <div class="workflow-desc">ส่งตัวอย่างไปห้องปฏิบัติการ วิเคราะห์สารเคมี (MET, CAF, MDMA) และลักษณะทางกายภาพ (ขนาด, สี, โลโก้) บันทึกเข้าระบบ F-NET</div>
+                    </div>
+                </div>
+
+                <div class="workflow-step">
+                    <div class="workflow-number">3</div>
+                    <div class="workflow-line"></div>
+                    <div class="workflow-content">
+                        <div class="workflow-title">🔬 Pill Fingerprint Matching</div>
+                        <div class="workflow-desc">ระบบ AI วิเคราะห์ภาพเม็ดยา เปรียบเทียบรูปร่างด้วย Visual Overlay และวิเคราะห์สารเคมีด้วย Chemical Comparison (±5% Tolerance)</div>
+                    </div>
+                </div>
+
+                <div class="workflow-step">
+                    <div class="workflow-number">4</div>
+                    <div class="workflow-line"></div>
+                    <div class="workflow-content">
+                        <div class="workflow-title">🤖 AI Processing</div>
+                        <div class="workflow-desc">Vision Transformer วิเคราะห์โลโก้ (98.9% accuracy) พร้อม Graph Neural Network เชื่อมโยงความสัมพันธ์ระหว่างคดี องค์กร และแหล่งผลิต</div>
+                    </div>
+                </div>
+
+                <div class="workflow-step">
+                    <div class="workflow-number">5</div>
+                    <div class="workflow-line"></div>
+                    <div class="workflow-content">
+                        <div class="workflow-title">🆔 Profile Matching</div>
+                        <div class="workflow-desc">ระบบสร้างหรือจับคู่ Drug Profile (DPF-YYYY-NNNN) แสดง Candidate List พร้อมค่าความเชื่อมั่น ระบุ Organization และ Production Batch ที่เกี่ยวข้อง</div>
+                    </div>
+                </div>
+
+                <div class="workflow-step">
+                    <div class="workflow-number">6</div>
+                    <div class="workflow-line"></div>
+                    <div class="workflow-content">
+                        <div class="workflow-title">👮 Investigation</div>
+                        <div class="workflow-desc">เจ้าหน้าที่สืบสวนใช้ Investigation Center ดูความเชื่อมโยงคดี Timeline แผนที่กระจายตัว และ Generate Report สำหรับดำเนินคดี</div>
+                    </div>
+                </div>
+
+                <div class="workflow-step">
+                    <div class="workflow-number">7</div>
+                    <div class="workflow-content">
+                        <div class="workflow-title">📊 Reporting & Analytics</div>
+                        <div class="workflow-desc">ผู้บริหารดูสถิติภาพรวมผ่าน Executive Dashboard, Export รายงาน PDF พร้อมข้อมูลสำหรับการวางแผนยุทธศาสตร์ปราบปรามยาเสพติด</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4: Development Roadmap -->
+        <section class="section">
+            <div class="section-header">
+                <div class="section-number">4</div>
+                <div>
+                    <div class="section-title">Development Roadmap</div>
+                    <div class="section-title-en">แผนพัฒนา 6 เดือน (Phase 1)</div>
+                </div>
+            </div>
+
+            <div class="roadmap-grid">
+                <div class="roadmap-card pending">
+                    <div class="roadmap-month">📅 เดือนที่ 1-2</div>
+                    <div class="roadmap-title">Foundation & Infrastructure</div>
+                    <ul class="roadmap-tasks">
+                        <li class="roadmap-task"><span class="task-icon">⏳</span> Setup Azure Cloud Environment</li>
+                        <li class="roadmap-task"><span class="task-icon">⏳</span> Deploy PostgreSQL + PostGIS</li>
+                        <li class="roadmap-task"><span class="task-icon">⏳</span> Configure CI/CD Pipeline</li>
+                        <li class="roadmap-task"><span class="task-icon">⏳</span> Setup Docker Containers</li>
+                        <li class="roadmap-task"><span class="task-icon">⏳</span> F-NET API Integration</li>
+                    </ul>
+                </div>
+
+                <div class="roadmap-card pending">
+                    <div class="roadmap-month">📅 เดือนที่ 2-3</div>
+                    <div class="roadmap-title">AI Model Development</div>
+                    <ul class="roadmap-tasks">
+                        <li class="roadmap-task"><span class="task-icon">⏳</span> Data Collection & Labeling</li>
+                        <li class="roadmap-task"><span class="task-icon">⏳</span> Vision Transformer Training</li>
+                        <li class="roadmap-task"><span class="task-icon">⏳</span> Logo Classification Model</li>
+                        <li class="roadmap-task"><span class="task-icon">⏳</span> Chemical Analysis Module</li>
+                        <li class="roadmap-task"><span class="task-icon">⏳</span> Model Validation (Target: 95%+)</li>
+                    </ul>
+                </div>
+
+                <div class="roadmap-card pending">
+                    <div class="roadmap-month">📅 เดือนที่ 3-4</div>
+                    <div class="roadmap-title">Core Features</div>
+                    <ul class="roadmap-tasks">
+                        <li class="roadmap-task"><span class="task-icon">⏳</span> Pill Fingerprint Matching</li>
+                        <li class="roadmap-task"><span class="task-icon">⏳</span> Drug Profile Management</li>
+                        <li class="roadmap-task"><span class="task-icon">⏳</span> Case Investigation System</li>
+                        <li class="roadmap-task"><span class="task-icon">⏳</span> GNN Organization Linking</li>
+                        <li class="roadmap-task"><span class="task-icon">⏳</span> Report Generation</li>
+                    </ul>
+                </div>
+
+                <div class="roadmap-card pending">
+                    <div class="roadmap-month">📅 เดือนที่ 4-5</div>
+                    <div class="roadmap-title">Mobile & Field Operations</div>
+                    <ul class="roadmap-tasks">
+                        <li class="roadmap-task"><span class="task-icon">⏳</span> Mobile Scanner App</li>
+                        <li class="roadmap-task"><span class="task-icon">⏳</span> QRGrid PWA Enhancement</li>
+                        <li class="roadmap-task"><span class="task-icon">⏳</span> Offline Mode Support</li>
+                        <li class="roadmap-task"><span class="task-icon">⏳</span> GPS Integration</li>
+                        <li class="roadmap-task"><span class="task-icon">⏳</span> Field Testing (3 Centers)</li>
+                    </ul>
+                </div>
+
+                <div class="roadmap-card pending">
+                    <div class="roadmap-month">📅 เดือนที่ 5-6</div>
+                    <div class="roadmap-title">Integration & Testing</div>
+                    <ul class="roadmap-tasks">
+                        <li class="roadmap-task"><span class="task-icon">⏳</span> System Integration Testing</li>
+                        <li class="roadmap-task"><span class="task-icon">⏳</span> Security Audit</li>
+                        <li class="roadmap-task"><span class="task-icon">⏳</span> Performance Optimization</li>
+                        <li class="roadmap-task"><span class="task-icon">⏳</span> User Training (พฐก.)</li>
+                        <li class="roadmap-task"><span class="task-icon">⏳</span> Documentation</li>
+                    </ul>
+                </div>
+
+                <div class="roadmap-card pending">
+                    <div class="roadmap-month">📅 เดือนที่ 6</div>
+                    <div class="roadmap-title">Deployment & Launch</div>
+                    <ul class="roadmap-tasks">
+                        <li class="roadmap-task"><span class="task-icon">⏳</span> Production Deployment</li>
+                        <li class="roadmap-task"><span class="task-icon">⏳</span> Pilot Launch (5 Centers)</li>
+                        <li class="roadmap-task"><span class="task-icon">⏳</span> User Acceptance Testing</li>
+                        <li class="roadmap-task"><span class="task-icon">⏳</span> Go-Live Support</li>
+                        <li class="roadmap-task"><span class="task-icon">⏳</span> Phase 1 Review</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 5: Development Cost -->
+        <section class="section">
+            <div class="section-header">
+                <div class="section-number">5</div>
+                <div>
+                    <div class="section-title">Development Cost</div>
+                    <div class="section-title-en">ต้นทุนการพัฒนา DPI-600 (6 เดือน)</div>
+                </div>
+            </div>
+
+            <!-- Team Cost -->
+            <div class="card">
+                <div class="card-title">👥 ทีมพัฒนา (Manpower Cost)</div>
+                <table class="cost-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 30%;">ตำแหน่ง</th>
+                            <th style="text-align: right;">เงินเดือน</th>
+                            <th style="text-align: center;">จำนวน</th>
+                            <th style="text-align: right;">6 เดือน (บาท)</th>
+                            <th style="text-align: right; background: rgba(0,255,136,0.2); color: var(--green);">บอย+AI (60%)</th>
+                            <th style="text-align: right; background: rgba(255,215,0,0.2); color: var(--gold);">ประหยัด</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>🎯 Project Director / Tech Lead</td>
+                            <td class="cost-amount">120,000</td>
+                            <td style="text-align: center;">1</td>
+                            <td class="cost-amount">720,000</td>
+                            <td class="cost-amount" style="color: var(--green);">432,000</td>
+                            <td class="cost-amount" style="color: var(--gold);">288,000</td>
+                        </tr>
+                        <tr>
+                            <td>🤖 AI/ML Engineer (Senior)</td>
+                            <td class="cost-amount">100,000</td>
+                            <td style="text-align: center;">1</td>
+                            <td class="cost-amount">600,000</td>
+                            <td class="cost-amount" style="color: var(--green);">360,000</td>
+                            <td class="cost-amount" style="color: var(--gold);">240,000</td>
+                        </tr>
+                        <tr>
+                            <td>🤖 AI/ML Engineer (Junior)</td>
+                            <td class="cost-amount">60,000</td>
+                            <td style="text-align: center;">1</td>
+                            <td class="cost-amount">360,000</td>
+                            <td class="cost-amount" style="color: var(--green);">216,000</td>
+                            <td class="cost-amount" style="color: var(--gold);">144,000</td>
+                        </tr>
+                        <tr>
+                            <td>💻 Full-stack Developer</td>
+                            <td class="cost-amount">70,000</td>
+                            <td style="text-align: center;">1</td>
+                            <td class="cost-amount">420,000</td>
+                            <td class="cost-amount" style="color: var(--green);">252,000</td>
+                            <td class="cost-amount" style="color: var(--gold);">168,000</td>
+                        </tr>
+                        <tr>
+                            <td>🎨 Frontend Developer / UI</td>
+                            <td class="cost-amount">55,000</td>
+                            <td style="text-align: center;">1</td>
+                            <td class="cost-amount">330,000</td>
+                            <td class="cost-amount" style="color: var(--green);">198,000</td>
+                            <td class="cost-amount" style="color: var(--gold);">132,000</td>
+                        </tr>
+                        <tr>
+                            <td>⚙️ DevOps Engineer</td>
+                            <td class="cost-amount">65,000</td>
+                            <td style="text-align: center;">1</td>
+                            <td class="cost-amount">390,000</td>
+                            <td class="cost-amount" style="color: var(--green);">234,000</td>
+                            <td class="cost-amount" style="color: var(--gold);">156,000</td>
+                        </tr>
+                        <tr>
+                            <td>🧪 QA Engineer / Tester</td>
+                            <td class="cost-amount">45,000</td>
+                            <td style="text-align: center;">1</td>
+                            <td class="cost-amount">270,000</td>
+                            <td class="cost-amount" style="color: var(--green);">162,000</td>
+                            <td class="cost-amount" style="color: var(--gold);">108,000</td>
+                        </tr>
+                        <tr class="cost-total">
+                            <td colspan="3">รวมค่าบุคลากร (7 คน)</td>
+                            <td class="cost-amount">3,090,000</td>
+                            <td class="cost-amount" style="color: var(--green);">1,854,000</td>
+                            <td class="cost-amount" style="color: var(--gold);">1,236,000</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div style="margin-top: 20px; padding: 20px; background: linear-gradient(135deg, rgba(0,255,136,0.1), rgba(255,215,0,0.1)); border-radius: 12px; text-align: center;">
+                    <div style="font-size: 1.1rem; color: var(--text-secondary); margin-bottom: 10px;">💡 <strong>บอย + AI</strong> ทำงานแทนทีม 7 คน ประหยัดต้นทุน <span style="color: var(--gold); font-weight: 700;">40%</span></div>
+                    <div style="display: flex; justify-content: center; gap: 40px; flex-wrap: wrap;">
+                        <div>
+                            <div style="font-family: 'Orbitron', sans-serif; font-size: 1.5rem; color: var(--text-muted);">3,090,000</div>
+                            <div style="font-size: 0.85rem; color: var(--text-muted);">💼 จ้างทีมปกติ</div>
+                        </div>
+                        <div style="font-size: 2rem; color: var(--text-muted);">→</div>
+                        <div>
+                            <div style="font-family: 'Orbitron', sans-serif; font-size: 1.5rem; color: var(--green);">1,854,000</div>
+                            <div style="font-size: 0.85rem; color: var(--green);">🤖 บอย + AI</div>
+                        </div>
+                        <div style="font-size: 2rem; color: var(--text-muted);">=</div>
+                        <div>
+                            <div style="font-family: 'Orbitron', sans-serif; font-size: 1.5rem; color: var(--gold);">1,236,000</div>
+                            <div style="font-size: 0.85rem; color: var(--gold);">💰 ประหยัด</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cloud & Infrastructure -->
+            <div class="card">
+                <div class="card-title">☁️ Cloud & Infrastructure</div>
+                <table class="cost-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 50%;">รายการ</th>
+                            <th style="text-align: right;">ต่อเดือน</th>
+                            <th style="text-align: right;">6 เดือน (บาท)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>🖥️ Azure Compute (Dev/Test VMs)</td>
+                            <td class="cost-amount">25,000</td>
+                            <td class="cost-amount">150,000</td>
+                        </tr>
+                        <tr>
+                            <td>🧠 Azure ML (GPU Training)</td>
+                            <td class="cost-amount">50,000</td>
+                            <td class="cost-amount">300,000</td>
+                        </tr>
+                        <tr>
+                            <td>🐘 PostgreSQL Database</td>
+                            <td class="cost-amount">8,000</td>
+                            <td class="cost-amount">48,000</td>
+                        </tr>
+                        <tr>
+                            <td>📦 Storage & CDN</td>
+                            <td class="cost-amount">5,000</td>
+                            <td class="cost-amount">30,000</td>
+                        </tr>
+                        <tr>
+                            <td>🔄 CI/CD Pipeline (GitHub Actions)</td>
+                            <td class="cost-amount">3,000</td>
+                            <td class="cost-amount">18,000</td>
+                        </tr>
+                        <tr class="cost-total">
+                            <td colspan="2">รวม Cloud</td>
+                            <td class="cost-amount">546,000</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Software & Licenses -->
+            <div class="card">
+                <div class="card-title">🔧 Software & Licenses</div>
+                <table class="cost-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 60%;">รายการ</th>
+                            <th style="text-align: right;">6 เดือน (บาท)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>📂 GitHub Team (7 users)</td>
+                            <td class="cost-amount">30,000</td>
+                        </tr>
+                        <tr>
+                            <td>🎨 Figma Pro (Design Tools)</td>
+                            <td class="cost-amount">20,000</td>
+                        </tr>
+                        <tr>
+                            <td>💻 JetBrains IDEs (PyCharm, WebStorm)</td>
+                            <td class="cost-amount">25,000</td>
+                        </tr>
+                        <tr>
+                            <td>📊 Monitoring & Analytics</td>
+                            <td class="cost-amount">40,000</td>
+                        </tr>
+                        <tr>
+                            <td>🔒 SSL Certificates & Security</td>
+                            <td class="cost-amount">15,000</td>
+                        </tr>
+                        <tr class="cost-total">
+                            <td>รวม Software</td>
+                            <td class="cost-amount">130,000</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Operational Costs -->
+            <div class="card">
+                <div class="card-title">🏢 Operational Costs</div>
+                <table class="cost-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 60%;">รายการ</th>
+                            <th style="text-align: right;">6 เดือน (บาท)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>🏠 Office Space / Co-working</td>
+                            <td class="cost-amount">120,000</td>
+                        </tr>
+                        <tr>
+                            <td>🖥️ Equipment (Depreciation)</td>
+                            <td class="cost-amount">80,000</td>
+                        </tr>
+                        <tr>
+                            <td>🚗 Travel & Site Visit (พฐก.)</td>
+                            <td class="cost-amount">60,000</td>
+                        </tr>
+                        <tr>
+                            <td>📋 Meeting & Workshop</td>
+                            <td class="cost-amount">40,000</td>
+                        </tr>
+                        <tr>
+                            <td>⚠️ Contingency Buffer (10%)</td>
+                            <td class="cost-amount">400,000</td>
+                        </tr>
+                        <tr class="cost-total">
+                            <td>รวม Operational</td>
+                            <td class="cost-amount">700,000</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Total Summary -->
+            <div class="card" style="background: linear-gradient(135deg, rgba(0,255,255,0.1), rgba(255,0,255,0.1));">
+                <div class="card-title">📊 สรุปต้นทุนรวม (เปรียบเทียบ 2 รูปแบบ)</div>
+                <table class="cost-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 40%;">หมวด</th>
+                            <th style="text-align: right;">💼 จ้างทีมปกติ</th>
+                            <th style="text-align: right; background: rgba(0,255,136,0.2); color: var(--green);">🤖 บอย+AI</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>👥 ค่าบุคลากร (Manpower)</td>
+                            <td class="cost-amount">3,090,000</td>
+                            <td class="cost-amount" style="color: var(--green);">1,854,000</td>
+                        </tr>
+                        <tr>
+                            <td>☁️ Cloud & Infrastructure</td>
+                            <td class="cost-amount">546,000</td>
+                            <td class="cost-amount" style="color: var(--green);">546,000</td>
+                        </tr>
+                        <tr>
+                            <td>🔧 Software & Licenses</td>
+                            <td class="cost-amount">130,000</td>
+                            <td class="cost-amount" style="color: var(--green);">130,000</td>
+                        </tr>
+                        <tr>
+                            <td>🏢 Operational Costs</td>
+                            <td class="cost-amount">700,000</td>
+                            <td class="cost-amount" style="color: var(--green);">500,000</td>
+                        </tr>
+                        <tr class="cost-total">
+                            <td><strong>💰 ต้นทุนรวมทั้งสิ้น</strong></td>
+                            <td class="cost-amount"><strong>4,466,000</strong></td>
+                            <td class="cost-amount" style="color: var(--green);"><strong>3,030,000</strong></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Profit Analysis -->
+            <div class="card">
+                <div class="card-title">📈 Profit Analysis (เปรียบเทียบ)</div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <!-- จ้างทีมปกติ -->
+                    <div style="padding: 25px; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 15px;">
+                        <div style="text-align: center; margin-bottom: 20px;">
+                            <div style="font-size: 1.1rem; color: var(--text-muted);">💼 จ้างทีมปกติ (7 คน)</div>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; text-align: center;">
+                            <div>
+                                <div style="font-family: 'Orbitron'; font-size: 1.3rem; color: var(--text-primary);">14.0M</div>
+                                <div style="font-size: 0.8rem; color: var(--text-muted);">ราคาขาย</div>
+                            </div>
+                            <div>
+                                <div style="font-family: 'Orbitron'; font-size: 1.3rem; color: var(--orange);">4.47M</div>
+                                <div style="font-size: 0.8rem; color: var(--text-muted);">ต้นทุน</div>
+                            </div>
+                            <div>
+                                <div style="font-family: 'Orbitron'; font-size: 1.3rem; color: var(--cyan);">9.53M</div>
+                                <div style="font-size: 0.8rem; color: var(--text-muted);">กำไรขั้นต้น</div>
+                            </div>
+                            <div>
+                                <div style="font-family: 'Orbitron'; font-size: 1.3rem; color: var(--magenta);">68%</div>
+                                <div style="font-size: 0.8rem; color: var(--text-muted);">Gross Margin</div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- บอย+AI -->
+                    <div style="padding: 25px; background: linear-gradient(135deg, rgba(0,255,136,0.1), rgba(0,255,255,0.1)); border: 2px solid var(--green); border-radius: 15px;">
+                        <div style="text-align: center; margin-bottom: 20px;">
+                            <div style="font-size: 1.1rem; color: var(--green);">🤖 บอย + AI <span style="background: var(--green); color: #000; padding: 2px 8px; border-radius: 10px; font-size: 0.7rem; margin-left: 5px;">แนะนำ</span></div>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; text-align: center;">
+                            <div>
+                                <div style="font-family: 'Orbitron'; font-size: 1.3rem; color: var(--text-primary);">14.0M</div>
+                                <div style="font-size: 0.8rem; color: var(--text-muted);">ราคาขาย</div>
+                            </div>
+                            <div>
+                                <div style="font-family: 'Orbitron'; font-size: 1.3rem; color: var(--green);">3.03M</div>
+                                <div style="font-size: 0.8rem; color: var(--text-muted);">ต้นทุน</div>
+                            </div>
+                            <div>
+                                <div style="font-family: 'Orbitron'; font-size: 1.3rem; color: var(--cyan);">10.97M</div>
+                                <div style="font-size: 0.8rem; color: var(--text-muted);">กำไรขั้นต้น</div>
+                            </div>
+                            <div>
+                                <div style="font-family: 'Orbitron'; font-size: 1.3rem; color: var(--gold);">78%</div>
+                                <div style="font-size: 0.8rem; color: var(--text-muted);">Gross Margin</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Summary Highlight -->
+                <div style="margin-top: 25px; padding: 20px; background: rgba(255,215,0,0.1); border: 1px solid var(--gold); border-radius: 12px; text-align: center;">
+                    <div style="font-size: 1.2rem; color: var(--gold); font-weight: 600;">💰 บอย+AI ช่วยเพิ่มกำไรได้อีก 1.44 ล้านบาท (+15%)</div>
+                    <div style="color: var(--text-muted); font-size: 0.9rem; margin-top: 8px;">ลดต้นทุนจาก 4.47M → 3.03M | เพิ่ม Margin จาก 68% → 78%</div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-brand">DPI-600 Drug Profile Intelligence System</div>
+        <div class="footer-company">พัฒนาโดย บริษัท แสงวิทย์ ซายน์ จำกัด</div>
+        <div class="footer-contact">
+            📱 <a href="tel:0850709938">085-070-9938</a> | 
+            💬 LINE: <a href="#">boy_saiyat</a> | 
+            👤 Autthapol Saiyat (Boy) - Technology & AI Program Director
+        </div>
+    </footer>
+
+    <script>
+        function toggleTheme() {
+            const html = document.documentElement;
+            const newTheme = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            document.getElementById('themeIcon').textContent = newTheme === 'light' ? '☀️' : '🌙';
+            localStorage.setItem('dpi600-theme', newTheme);
+        }
+
+        const savedTheme = localStorage.getItem('dpi600-theme');
+        if (savedTheme) {
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            document.getElementById('themeIcon').textContent = savedTheme === 'light' ? '☀️' : '🌙';
+        }
+    </script>
+</body>
+</html>
