@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DPI-600 Drug Profile AI System</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #0a0a1a 0%, #1a1a3a 100%);
+            min-height: 100vh;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container { max-width: 800px; padding: 40px; text-align: center; }
+        h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(90deg, #00ffff, #ff00ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+        .subtitle { color: #888; margin-bottom: 40px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
+        .card {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(0,255,255,0.3);
+            border-radius: 15px;
+            padding: 30px 20px;
+            text-decoration: none;
+            color: #fff;
+            transition: all 0.3s;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            border-color: #00ffff;
+            box-shadow: 0 10px 30px rgba(0,255,255,0.2);
+        }
+        .card .icon { font-size: 3rem; margin-bottom: 15px; }
+        .card h3 { color: #00ffff; margin-bottom: 10px; }
+        .card p { color: #888; font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔬 DPI-600</h1>
+        <p class="subtitle">Drug Profile AI System - ระบบ AI วิเคราะห์ยาเสพติด</p>
+        <div class="grid">
+            <a href="inference-ui/" class="card">
+                <div class="icon">🔍</div>
+                <h3>Inference UI</h3>
+                <p>อัพโหลดภาพ วิเคราะห์โลโก้ยา</p>
+            </a>
+            <a href="training-dashboard/" class="card">
+                <div class="icon">📊</div>
+                <h3>Training Dashboard</h3>
+                <p>ดูผล Accuracy, Loss</p>
+            </a>
+            <a href="mobile-scanner/" class="card">
+                <div class="icon">📱</div>
+                <h3>Mobile Scanner</h3>
+                <p>สแกนยาจากกล้องมือถือ</p>
+            </a>
+            <a href="labeling-studio/" class="card">
+                <div class="icon">🏷️</div>
+                <h3>Label Studio</h3>
+                <p>ติด Label ภาพยา</p>
+            </a>
+            <a href="qrgrid-v2/" class="card">
+                <div class="icon">📷</div>
+                <h3>QRGrid v2</h3>
+                <p>ถ่ายภาพ + Scale Plate</p>
+            </a>
+        </div>
+    </div>
+</body>
+</html>
