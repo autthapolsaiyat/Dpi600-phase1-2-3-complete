@@ -12,13 +12,10 @@
             --magenta: #ff00ff;
             --purple: #8b5cf6;
             --green: #00ff88;
-            --orange: #ff6600;
-            --gold: #ffd700;
         }
 
         [data-theme="dark"] {
             --bg-primary: #050510;
-            --bg-secondary: #0a0a1a;
             --bg-card: rgba(0, 0, 0, 0.5);
             --text-primary: #ffffff;
             --text-secondary: rgba(255, 255, 255, 0.8);
@@ -28,7 +25,6 @@
 
         [data-theme="light"] {
             --bg-primary: #f0f4f8;
-            --bg-secondary: #ffffff;
             --bg-card: rgba(255, 255, 255, 0.9);
             --text-primary: #1a1a2e;
             --text-secondary: rgba(26, 26, 46, 0.8);
@@ -48,11 +44,190 @@
             overflow-x: hidden;
         }
 
+        /* Login Overlay */
+        .login-overlay {
+            position: fixed;
+            inset: 0;
+            background: var(--bg-primary);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.5s, visibility 0.5s;
+        }
+
+        .login-overlay.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .login-box {
+            background: var(--bg-card);
+            border: 2px solid var(--border-color);
+            border-radius: 30px;
+            padding: 50px 40px;
+            width: 90%;
+            max-width: 420px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-box::before {
+            content: '';
+            position: absolute;
+            top: -50%; left: -50%;
+            width: 200%; height: 200%;
+            background: conic-gradient(from 0deg, transparent, var(--cyan), transparent, var(--magenta), transparent);
+            animation: rotateBorder 4s linear infinite;
+            z-index: -1;
+        }
+
+        @keyframes rotateBorder {
+            100% { transform: rotate(360deg); }
+        }
+
+        .login-box::after {
+            content: '';
+            position: absolute;
+            inset: 3px;
+            background: var(--bg-primary);
+            border-radius: 28px;
+            z-index: -1;
+        }
+
+        .login-logo {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 25px;
+            position: relative;
+        }
+
+        .login-logo-ring {
+            position: absolute;
+            inset: 0;
+            border: 3px solid var(--cyan);
+            border-radius: 50%;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .login-logo-ring:nth-child(2) {
+            inset: -8px;
+            border-color: var(--magenta);
+            animation-delay: 0.5s;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.5; }
+        }
+
+        .login-logo-text {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--cyan), var(--magenta));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .login-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.8rem;
+            background: linear-gradient(135deg, var(--cyan), var(--magenta));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+
+        .login-subtitle {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            margin-bottom: 30px;
+        }
+
+        .login-input-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .login-label {
+            display: block;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+        }
+
+        .login-input {
+            width: 100%;
+            padding: 14px 18px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-size: 1rem;
+            font-family: inherit;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .login-input:focus {
+            outline: none;
+            border-color: var(--cyan);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, var(--cyan), var(--magenta));
+            border: none;
+            border-radius: 12px;
+            color: #000;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+            margin-top: 10px;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0, 255, 255, 0.3);
+        }
+
+        .login-error {
+            color: #ff4444;
+            font-size: 0.9rem;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .login-demo {
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .login-demo code {
+            background: rgba(0, 255, 255, 0.1);
+            padding: 3px 8px;
+            border-radius: 5px;
+            color: var(--cyan);
+        }
+
         /* Background */
         .bg-grid {
             position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
+            inset: 0;
             background-image: 
                 linear-gradient(rgba(0,255,255,0.03) 1px, transparent 1px),
                 linear-gradient(90deg, rgba(0,255,255,0.03) 1px, transparent 1px);
@@ -68,8 +243,7 @@
 
         .particles {
             position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
+            inset: 0;
             z-index: -1;
             overflow: hidden;
         }
@@ -111,6 +285,30 @@
             transform: scale(1.05);
         }
 
+        /* Logout Button */
+        .logout-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 50;
+            padding: 12px 20px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .logout-btn:hover {
+            border-color: #ff4444;
+            color: #ff4444;
+        }
+
         /* Header */
         .header {
             text-align: center;
@@ -136,11 +334,6 @@
             inset: -10px;
             border-color: var(--magenta);
             animation-delay: 0.5s;
-        }
-
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.1); opacity: 0.5; }
         }
 
         .logo-text {
@@ -242,9 +435,7 @@
             transition: opacity 0.3s;
         }
 
-        .role-card:hover::before {
-            opacity: 1;
-        }
+        .role-card:hover::before { opacity: 1; }
 
         .role-card:hover {
             transform: translateY(-10px) scale(1.02);
@@ -263,14 +454,7 @@
         .role-card.ai-admin { --card-color: var(--purple); }
         .role-card.ai-admin:hover { border-color: var(--purple); }
 
-        .role-card.executive { --card-color: var(--gold); }
-        .role-card.executive:hover { border-color: var(--gold); }
-
-        .role-icon {
-            font-size: 4rem;
-            margin-bottom: 20px;
-            display: block;
-        }
+        .role-icon { font-size: 4rem; margin-bottom: 20px; display: block; }
 
         .role-title {
             font-family: 'Orbitron', sans-serif;
@@ -306,12 +490,6 @@
             border-radius: 15px;
             font-size: 0.8rem;
             color: var(--text-muted);
-        }
-
-        /* Executive Card - Full Width */
-        .executive-row {
-            max-width: 450px;
-            margin: 0 auto 60px;
         }
 
         /* Stats */
@@ -360,144 +538,154 @@
             margin-bottom: 10px;
         }
 
-        .footer a {
-            color: var(--cyan);
-            text-decoration: none;
-        }
+        .footer a { color: var(--cyan); text-decoration: none; }
 
-        .footer-contact {
-            margin-top: 15px;
-            font-size: 0.9rem;
-        }
+        .footer-contact { margin-top: 15px; font-size: 0.9rem; }
+
+        /* Main Content Hidden by Default */
+        .main-content { display: none; }
+        .main-content.show { display: block; }
     </style>
 </head>
 <body>
     <div class="bg-grid"></div>
     <div class="particles" id="particles"></div>
 
-    <!-- Theme Toggle -->
-    <div class="theme-toggle" onclick="toggleTheme()">
-        <span id="themeIcon">🌙</span>
-    </div>
-
-    <!-- Header -->
-    <header class="header">
-        <div class="logo-container">
-            <div class="logo-ring"></div>
-            <div class="logo-ring"></div>
-            <div class="logo-text">DPI</div>
-        </div>
-        <h1 class="header-title">DPI-600</h1>
-        <p class="header-subtitle">Drug Profile Intelligence System</p>
-        <p class="header-org">🏛️ สำนักงานพิสูจน์หลักฐานตำรวจ | Office of Police Forensic Science</p>
-        <div class="version-badge">VERSION 2.0 | DECEMBER 2568</div>
-    </header>
-
-    <div class="container">
-        <!-- Stats -->
-        <div class="stats-row">
-            <div class="stat-card">
-                <div class="stat-value">127</div>
-                <div class="stat-label">Total Cases</div>
+    <!-- Login Overlay -->
+    <div class="login-overlay" id="loginOverlay">
+        <div class="login-box">
+            <div class="login-logo">
+                <div class="login-logo-ring"></div>
+                <div class="login-logo-ring"></div>
+                <div class="login-logo-text">DPI</div>
             </div>
-            <div class="stat-card">
-                <div class="stat-value">42</div>
-                <div class="stat-label">Drug Profiles</div>
+            <h1 class="login-title">DPI-600</h1>
+            <p class="login-subtitle">Drug Profile Intelligence System</p>
+            
+            <form id="loginForm">
+                <div class="login-input-group">
+                    <label class="login-label">👤 Username</label>
+                    <input type="text" class="login-input" id="username" placeholder="Enter username" autocomplete="off">
+                </div>
+                <div class="login-input-group">
+                    <label class="login-label">🔒 Password</label>
+                    <input type="password" class="login-input" id="password" placeholder="Enter password">
+                </div>
+                <button type="submit" class="login-btn">🔓 LOGIN</button>
+                <div class="login-error" id="loginError">❌ Username หรือ Password ไม่ถูกต้อง</div>
+            </form>
+            
+            <div class="login-demo">
+                Demo: <code>admin</code> / <code>dpi600</code>
             </div>
-            <div class="stat-card">
-                <div class="stat-value">98.9%</div>
-                <div class="stat-label">AI Accuracy</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value">11</div>
-                <div class="stat-label">Forensic Centers</div>
-            </div>
-        </div>
-
-        <!-- Section Title -->
-        <div class="section-title">🎯 เลือกส่วนงานของคุณ</div>
-
-        <!-- Role Grid -->
-        <div class="role-grid">
-            <!-- Investigation -->
-            <a href="investigation/" class="role-card investigation">
-                <span class="role-icon">👮</span>
-                <div class="role-title">เจ้าหน้าที่สืบสวน</div>
-                <div class="role-title-en">Investigation</div>
-                <div class="role-desc">วิเคราะห์คดี ค้นหา Organization Match<br>ดูประวัติ Timeline สร้างรายงาน</div>
-                <div class="role-features">
-                    <span class="role-feature">🔍 วิเคราะห์คดี</span>
-                    <span class="role-feature">🆔 Profile</span>
-                    <span class="role-feature">📋 Report</span>
-                </div>
-            </a>
-
-            <!-- Field -->
-            <a href="field/" class="role-card field">
-                <span class="role-icon">📱</span>
-                <div class="role-title">ภาคสนาม</div>
-                <div class="role-title-en">Field Operations</div>
-                <div class="role-desc">ถ่ายภาพหลักฐาน Scan QR Code<br>บันทึกข้อมูลหน้างาน</div>
-                <div class="role-features">
-                    <span class="role-feature">📷 Scanner</span>
-                    <span class="role-feature">📱 QRGrid</span>
-                    <span class="role-feature">📍 GPS</span>
-                </div>
-            </a>
-
-            <!-- Forensic -->
-            <a href="forensic/" class="role-card forensic">
-                <span class="role-icon">🧪</span>
-                <div class="role-title">พิสูจน์หลักฐาน</div>
-                <div class="role-title-en">Forensic Lab</div>
-                <div class="role-desc">เปรียบเทียบเม็ดยา วิเคราะห์สารเคมี<br>Labeling ข้อมูลสำหรับ AI</div>
-                <div class="role-features">
-                    <span class="role-feature">🔬 Pill Match</span>
-                    <span class="role-feature">🏷️ Labeling</span>
-                    <span class="role-feature">📊 Chemical</span>
-                </div>
-            </a>
-
-            <!-- AI Admin -->
-            <a href="ai-admin/" class="role-card ai-admin">
-                <span class="role-icon">🤖</span>
-                <div class="role-title">AI Admin</div>
-                <div class="role-title-en">AI Management</div>
-                <div class="role-desc">Train Model, ดู Inference Results<br>จัดการระบบ AI</div>
-                <div class="role-features">
-                    <span class="role-feature">🧠 Training</span>
-                    <span class="role-feature">🎯 Inference</span>
-                    <span class="role-feature">📈 Monitor</span>
-                </div>
-            </a>
-        </div>
-
-        <!-- Executive - Separate Row -->
-        <div class="executive-row">
-            <a href="executive/" class="role-card executive">
-                <span class="role-icon">👔</span>
-                <div class="role-title">ผู้บริหาร</div>
-                <div class="role-title-en">Executive</div>
-                <div class="role-desc">Presentation, ใบเสนอราคา, สรุปภาพรวม</div>
-                <div class="role-features">
-                    <span class="role-feature">📊 Presentation</span>
-                    <span class="role-feature">💰 Quotation</span>
-                    <span class="role-feature">📈 Dashboard</span>
-                </div>
-            </a>
         </div>
     </div>
 
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="footer-brand">DPI-600 Drug Profile Intelligence System</div>
-        <p>พัฒนาโดย <a href="#">บริษัท แสงวิทย์ ซายน์ จำกัด</a></p>
-        <div class="footer-contact">
-            📱 <a href="tel:0850709938">085-070-9938</a> | 
-            💬 LINE: <a href="#">boy_saiyat</a> | 
-            👤 Autthapol Saiyat (Boy) - Technology & AI Program Director
+    <!-- Main Content -->
+    <div class="main-content" id="mainContent">
+        <div class="theme-toggle" onclick="toggleTheme()">
+            <span id="themeIcon">🌙</span>
         </div>
-    </footer>
+
+        <div class="logout-btn" onclick="logout()">
+            🚪 Logout
+        </div>
+
+        <header class="header">
+            <div class="logo-container">
+                <div class="logo-ring"></div>
+                <div class="logo-ring"></div>
+                <div class="logo-text">DPI</div>
+            </div>
+            <h1 class="header-title">DPI-600</h1>
+            <p class="header-subtitle">Drug Profile Intelligence System</p>
+            <p class="header-org">🏛️ สำนักงานพิสูจน์หลักฐานตำรวจ | Office of Police Forensic Science</p>
+            <div class="version-badge">VERSION 2.0 | DECEMBER 2568</div>
+        </header>
+
+        <div class="container">
+            <div class="stats-row">
+                <div class="stat-card">
+                    <div class="stat-value">127</div>
+                    <div class="stat-label">Total Cases</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">42</div>
+                    <div class="stat-label">Drug Profiles</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">98.9%</div>
+                    <div class="stat-label">AI Accuracy</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">11</div>
+                    <div class="stat-label">Forensic Centers</div>
+                </div>
+            </div>
+
+            <div class="section-title">🎯 เลือกส่วนงานของคุณ</div>
+
+            <div class="role-grid">
+                <a href="investigation/" class="role-card investigation">
+                    <span class="role-icon">👮</span>
+                    <div class="role-title">เจ้าหน้าที่สืบสวน</div>
+                    <div class="role-title-en">Investigation</div>
+                    <div class="role-desc">วิเคราะห์คดี ค้นหา Organization Match<br>ดูประวัติ Timeline สร้างรายงาน</div>
+                    <div class="role-features">
+                        <span class="role-feature">🔍 วิเคราะห์คดี</span>
+                        <span class="role-feature">🆔 Profile</span>
+                        <span class="role-feature">📋 Report</span>
+                    </div>
+                </a>
+
+                <a href="field/" class="role-card field">
+                    <span class="role-icon">📱</span>
+                    <div class="role-title">ภาคสนาม</div>
+                    <div class="role-title-en">Field Operations</div>
+                    <div class="role-desc">ถ่ายภาพหลักฐาน Scan QR Code<br>บันทึกข้อมูลหน้างาน</div>
+                    <div class="role-features">
+                        <span class="role-feature">📷 Scanner</span>
+                        <span class="role-feature">📱 QRGrid</span>
+                        <span class="role-feature">📍 GPS</span>
+                    </div>
+                </a>
+
+                <a href="forensic/" class="role-card forensic">
+                    <span class="role-icon">🧪</span>
+                    <div class="role-title">พิสูจน์หลักฐาน</div>
+                    <div class="role-title-en">Forensic Lab</div>
+                    <div class="role-desc">เปรียบเทียบเม็ดยา วิเคราะห์สารเคมี<br>Labeling ข้อมูลสำหรับ AI</div>
+                    <div class="role-features">
+                        <span class="role-feature">🔬 Pill Match</span>
+                        <span class="role-feature">🏷️ Labeling</span>
+                        <span class="role-feature">📊 Chemical</span>
+                    </div>
+                </a>
+
+                <a href="ai-admin/" class="role-card ai-admin">
+                    <span class="role-icon">🤖</span>
+                    <div class="role-title">AI Admin</div>
+                    <div class="role-title-en">AI Management</div>
+                    <div class="role-desc">Train Model, ดู Inference Results<br>จัดการระบบ AI</div>
+                    <div class="role-features">
+                        <span class="role-feature">🧠 Training</span>
+                        <span class="role-feature">🎯 Inference</span>
+                        <span class="role-feature">📈 Monitor</span>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <footer class="footer">
+            <div class="footer-brand">DPI-600 Drug Profile Intelligence System</div>
+            <p>พัฒนาโดย <a href="#">บริษัท แสงวิทย์ ซายน์ จำกัด</a></p>
+            <div class="footer-contact">
+                📱 <a href="tel:0850709938">085-070-9938</a> | 
+                💬 LINE: <a href="#">boy_saiyat</a> | 
+                👤 Autthapol Saiyat (Boy) - Technology & AI Program Director
+            </div>
+        </footer>
+    </div>
 
     <script>
         // Particles
@@ -520,11 +708,53 @@
             localStorage.setItem('dpi600-theme', newTheme);
         }
 
-        // Load saved theme
         const savedTheme = localStorage.getItem('dpi600-theme');
         if (savedTheme) {
             document.documentElement.setAttribute('data-theme', savedTheme);
             document.getElementById('themeIcon').textContent = savedTheme === 'light' ? '☀️' : '🌙';
+        }
+
+        // Login System
+        const validCredentials = [
+            { username: 'admin', password: 'dpi600' },
+            { username: 'demo', password: 'demo123' },
+            { username: 'user', password: 'user123' }
+        ];
+
+        if (localStorage.getItem('dpi600-logged-in') === 'true') {
+            document.getElementById('loginOverlay').classList.add('hidden');
+            document.getElementById('mainContent').classList.add('show');
+        }
+
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            const isValid = validCredentials.some(cred => 
+                cred.username === username && cred.password === password
+            );
+            
+            if (isValid) {
+                localStorage.setItem('dpi600-logged-in', 'true');
+                localStorage.setItem('dpi600-user', username);
+                document.getElementById('loginOverlay').classList.add('hidden');
+                document.getElementById('mainContent').classList.add('show');
+            } else {
+                document.getElementById('loginError').style.display = 'block';
+                document.getElementById('password').value = '';
+            }
+        });
+
+        function logout() {
+            localStorage.removeItem('dpi600-logged-in');
+            localStorage.removeItem('dpi600-user');
+            document.getElementById('loginOverlay').classList.remove('hidden');
+            document.getElementById('mainContent').classList.remove('show');
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+            document.getElementById('loginError').style.display = 'none';
         }
     </script>
 </body>
