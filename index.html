@@ -1,104 +1,765 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="th" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DPI-600 Drug Profile AI System</title>
+    <title>DPI-600 Drug Profile Intelligence System</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔬</text></svg>">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --cyan: #00ffff;
+            --magenta: #ff00ff;
+            --purple: #8b5cf6;
+            --green: #00ff88;
+            --orange: #ff6600;
+            --yellow: #ffcc00;
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #050510;
+            --bg-card: rgba(0, 0, 0, 0.4);
+            --text-primary: #ffffff;
+            --text-secondary: rgba(255, 255, 255, 0.7);
+            --border-color: rgba(0, 255, 255, 0.2);
+        }
+
+        [data-theme="light"] {
+            --bg-primary: #f0f4f8;
+            --bg-card: rgba(255, 255, 255, 0.9);
+            --text-primary: #1a1a2e;
+            --text-secondary: rgba(26, 26, 46, 0.8);
+            --border-color: rgba(0, 150, 150, 0.3);
+            --cyan: #0099aa;
+            --magenta: #cc0088;
+            --green: #00aa66;
+        }
+
         * { margin: 0; padding: 0; box-sizing: border-box; }
+
         body {
-            font-family: 'Segoe UI', sans-serif;
-            background: linear-gradient(135deg, #0a0a1a 0%, #1a1a3a 100%);
+            font-family: 'Rajdhani', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
             min-height: 100vh;
-            color: #fff;
+            overflow-x: hidden;
+        }
+
+        /* Background */
+        .bg-grid {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-image: 
+                linear-gradient(rgba(0,255,255,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0,255,255,0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: gridMove 20s linear infinite;
+            z-index: -2;
+        }
+
+        @keyframes gridMove {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(50px, 50px); }
+        }
+
+        .particles {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px; height: 4px;
+            background: var(--cyan);
+            border-radius: 50%;
+            animation: float 15s infinite ease-in-out;
+        }
+
+        .particle:nth-child(odd) { background: var(--magenta); }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(100vh) scale(0); opacity: 0; }
+            10% { opacity: 1; transform: scale(1); }
+            90% { opacity: 1; }
+            100% { transform: translateY(-100vh) scale(0); opacity: 0; }
+        }
+
+        /* Login Overlay */
+        .login-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 100;
             display: flex;
-            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: rgba(5, 5, 16, 0.98);
+            transition: all 0.5s;
         }
-        .container { 
-            max-width: 900px; 
-            padding: 40px; 
-            text-align: center; 
-            margin: auto;
-            flex: 1;
+
+        .login-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
         }
-        h1 {
+
+        .login-card {
+            width: 95%;
+            max-width: 450px;
+            padding: 40px;
+            background: linear-gradient(135deg, rgba(0, 255, 255, 0.05), rgba(255, 0, 255, 0.05));
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 25px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-card::before {
+            content: '';
+            position: absolute;
+            top: -50%; left: -50%;
+            width: 200%; height: 200%;
+            background: conic-gradient(from 0deg, transparent, rgba(0, 255, 255, 0.1), transparent 30%);
+            animation: rotateBorder 6s linear infinite;
+        }
+
+        @keyframes rotateBorder {
+            to { transform: rotate(360deg); }
+        }
+
+        .login-card > * { position: relative; z-index: 1; }
+
+        .logo-container {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 25px;
+            position: relative;
+        }
+
+        .logo-ring {
+            position: absolute;
+            inset: 0;
+            border: 3px solid var(--cyan);
+            border-radius: 50%;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .logo-ring:nth-child(2) {
+            inset: -10px;
+            border-color: var(--magenta);
+            animation-delay: 0.5s;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.5; }
+        }
+
+        .logo-text {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--cyan), var(--magenta));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .system-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+            background: linear-gradient(90deg, var(--cyan), var(--magenta));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 5px;
+        }
+
+        .system-subtitle {
+            color: var(--text-secondary);
+            margin-bottom: 25px;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+            text-align: left;
+        }
+
+        .input-label {
+            display: block;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 14px 18px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        .input-field:focus {
+            border-color: var(--cyan);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 16px;
+            margin-top: 10px;
+            background: linear-gradient(135deg, var(--cyan), var(--magenta));
+            border: none;
+            border-radius: 10px;
+            color: #000;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0, 255, 255, 0.4);
+        }
+
+        .demo-hint {
+            margin-top: 20px;
+            padding: 12px;
+            background: rgba(255, 102, 0, 0.1);
+            border: 1px solid rgba(255, 102, 0, 0.3);
+            border-radius: 8px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .demo-hint code {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 2px 8px;
+            border-radius: 4px;
+            color: var(--cyan);
+        }
+
+        .error-msg {
+            display: none;
+            margin-top: 15px;
+            padding: 10px;
+            background: rgba(255, 0, 0, 0.1);
+            border: 1px solid rgba(255, 0, 0, 0.3);
+            border-radius: 8px;
+            color: #ff6666;
+        }
+
+        /* Main Content */
+        .main-content {
+            display: none;
+            min-height: 100vh;
+        }
+
+        .main-content.visible {
+            display: block;
+            animation: fadeIn 0.8s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Header */
+        .header {
+            padding: 30px 20px;
+            text-align: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .header-logo {
+            font-family: 'Orbitron', sans-serif;
             font-size: 2.5rem;
-            background: linear-gradient(90deg, #00ffff, #ff00ff);
+            background: linear-gradient(135deg, var(--cyan), var(--magenta));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             margin-bottom: 10px;
         }
-        .subtitle { color: #888; margin-bottom: 40px; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
-        .card {
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(0,255,255,0.3);
-            border-radius: 15px;
-            padding: 30px 20px;
-            text-decoration: none;
-            color: #fff;
+
+        .header-subtitle {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        .header-meta {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 50;
+            padding: 10px 15px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 25px;
+            cursor: pointer;
             transition: all 0.3s;
         }
-        .card:hover {
-            transform: translateY(-5px);
-            border-color: #00ffff;
-            box-shadow: 0 10px 30px rgba(0,255,255,0.2);
+
+        .theme-toggle:hover {
+            border-color: var(--cyan);
         }
-        .card .icon { font-size: 3rem; margin-bottom: 15px; }
-        .card h3 { color: #00ffff; margin-bottom: 10px; }
-        .card p { color: #888; font-size: 0.9rem; }
-        .footer {
+
+        /* Container */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        /* Section Title */
+        .section-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.3rem;
+            color: var(--cyan);
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* App Grid */
+        .app-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 50px;
+        }
+
+        .app-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 30px;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .app-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 255, 255, 0.1), transparent);
+            transition: left 0.5s;
+        }
+
+        .app-card:hover::before {
+            left: 100%;
+        }
+
+        .app-card:hover {
+            border-color: var(--cyan);
+            transform: translateY(-8px);
+            box-shadow: 0 15px 40px rgba(0, 255, 255, 0.2);
+        }
+
+        .app-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+
+        .app-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+        }
+
+        .app-desc {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .app-badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.7rem;
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .badge-new {
+            background: rgba(0, 255, 136, 0.2);
+            color: var(--green);
+            border: 1px solid var(--green);
+        }
+
+        .badge-core {
+            background: rgba(0, 255, 255, 0.2);
+            color: var(--cyan);
+            border: 1px solid var(--cyan);
+        }
+
+        /* Stats Section */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 20px;
+            margin-bottom: 50px;
+        }
+
+        @media (max-width: 1000px) {
+            .stats-grid { grid-template-columns: repeat(3, 1fr); }
+        }
+
+        @media (max-width: 600px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 15px;
+            padding: 25px;
             text-align: center;
-            padding: 20px;
-            background: rgba(0,0,0,0.3);
-            border-top: 1px solid rgba(0,255,255,0.2);
-            color: #888;
+            transition: all 0.3s;
+        }
+
+        .stat-card:hover {
+            border-color: var(--cyan);
+        }
+
+        .stat-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.2rem;
+            color: var(--cyan);
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
             font-size: 0.85rem;
         }
+
+        /* Quick Links */
+        .quick-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 50px;
+        }
+
+        .quick-link {
+            padding: 12px 25px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 25px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .quick-link:hover {
+            border-color: var(--cyan);
+            color: var(--cyan);
+            background: rgba(0, 255, 255, 0.1);
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 30px 20px;
+            border-top: 1px solid var(--border-color);
+            color: var(--text-secondary);
+        }
+
         .footer a {
-            color: #00ffff;
+            color: var(--cyan);
             text-decoration: none;
         }
-        .footer a:hover {
-            text-decoration: underline;
+
+        .footer-contact {
+            margin-top: 10px;
+            font-size: 0.9rem;
+        }
+
+        /* Version Badge */
+        .version-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            background: linear-gradient(135deg, var(--cyan), var(--magenta));
+            border-radius: 20px;
+            color: #000;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 700;
+            margin-top: 10px;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>🔬 DPI-600</h1>
-        <p class="subtitle">Drug Profile AI System - ระบบ AI วิเคราะห์ยาเสพติด</p>
-        <div class="grid">
-            <a href="inference-ui/" class="card">
-                <div class="icon">🔍</div>
-                <h3>Inference UI</h3>
-                <p>อัพโหลดภาพ วิเคราะห์โลโก้ยา</p>
-            </a>
-            <a href="training-dashboard/" class="card">
-                <div class="icon">📊</div>
-                <h3>Training Dashboard</h3>
-                <p>ดูผล Accuracy, Loss</p>
-            </a>
-            <a href="mobile-scanner/" class="card">
-                <div class="icon">📱</div>
-                <h3>Mobile Scanner</h3>
-                <p>สแกนยาจากกล้องมือถือ</p>
-            </a>
-            <a href="labeling-studio/" class="card">
-                <div class="icon">🏷️</div>
-                <h3>Label Studio</h3>
-                <p>ติด Label ภาพยา</p>
-            </a>
-            <a href="qrgrid-v2/" class="card">
-                <div class="icon">📷</div>
-                <h3>QRGrid v2</h3>
-                <p>ถ่ายภาพ + Scale Plate</p>
-            </a>
+    <div class="bg-grid"></div>
+    <div class="particles" id="particles"></div>
+
+    <!-- Login Overlay -->
+    <div class="login-overlay" id="loginOverlay">
+        <div class="login-card">
+            <div class="logo-container">
+                <div class="logo-ring"></div>
+                <div class="logo-ring"></div>
+                <div class="logo-text">DPI</div>
+            </div>
+            <h1 class="system-title">DPI-600</h1>
+            <p class="system-subtitle">Drug Profile Intelligence System</p>
+            
+            <form onsubmit="return handleLogin(event)">
+                <div class="input-group">
+                    <label class="input-label">Username</label>
+                    <input type="text" class="input-field" id="username" placeholder="Enter username" required>
+                </div>
+                <div class="input-group">
+                    <label class="input-label">Password</label>
+                    <input type="password" class="input-field" id="password" placeholder="Enter password" required>
+                </div>
+                <button type="submit" class="login-btn">🔓 ACCESS SYSTEM</button>
+            </form>
+
+            <div class="demo-hint">
+                ⚡ Demo Access: <code>admin</code> / <code>admin123</code>
+            </div>
+
+            <div class="error-msg" id="errorMsg">❌ Invalid credentials</div>
         </div>
     </div>
-    <div class="footer">
-        <p>© 2025 Autthapol Saiyat (Boy) - Technology & AI Program Director</p>
-        <p>📱 Mobile: <a href="tel:085-070-9938">085-070-9938</a> | 💬 LINE: <a href="https://line.me/ti/p/boy_saiyat">boy_saiyat</a></p>
+
+    <!-- Theme Toggle -->
+    <div class="theme-toggle" onclick="toggleTheme()">
+        <span id="themeIcon">🌙</span>
     </div>
+
+    <!-- Main Content -->
+    <div class="main-content" id="mainContent">
+        <!-- Header -->
+        <header class="header">
+            <h1 class="header-logo">🔬 DPI-600</h1>
+            <p class="header-subtitle">Drug Profile Intelligence System | ระบบวิเคราะห์โปรไฟล์ยาเสพติด</p>
+            <div class="header-meta">
+                <div class="meta-item">🏛️ สำนักงานพิสูจน์หลักฐานตำรวจ</div>
+                <div class="meta-item">🌐 11 Forensic Centers</div>
+                <div class="meta-item">👤 <span id="currentUser">Admin</span></div>
+            </div>
+            <div class="version-badge">VERSION 2.0 | DECEMBER 2568</div>
+        </header>
+
+        <div class="container">
+            <!-- Stats -->
+            <div class="section-title">📊 SYSTEM OVERVIEW</div>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value">127</div>
+                    <div class="stat-label">Total Cases</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">42</div>
+                    <div class="stat-label">Drug Profiles</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">4.2M</div>
+                    <div class="stat-label">Pills Seized</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">98.9%</div>
+                    <div class="stat-label">AI Accuracy</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">5</div>
+                    <div class="stat-label">Organizations</div>
+                </div>
+            </div>
+
+            <!-- Core Applications -->
+            <div class="section-title">🎯 CORE APPLICATIONS</div>
+            <div class="app-grid">
+                <div class="app-card" onclick="openApp('DPI600_Investigation_Center.html')">
+                    <span class="app-badge badge-core">CORE</span>
+                    <div class="app-icon">🔍</div>
+                    <h3 class="app-title">Investigation Center</h3>
+                    <p class="app-desc">วิเคราะห์คดียาเสพติด - อัพโหลดภาพ + ข้อมูลเคมี เพื่อค้นหา Candidate Matches</p>
+                </div>
+
+                <div class="app-card" onclick="openApp('DPI600_Pill_Fingerprint_Matching.html')">
+                    <span class="app-badge badge-new">NEW</span>
+                    <div class="app-icon">🔬</div>
+                    <h3 class="app-title">Pill Fingerprint Matching</h3>
+                    <p class="app-desc">เปรียบเทียบรูปร่างเม็ดยา ซ้อนภาพ + Chemical Analysis สร้าง Drug Profile</p>
+                </div>
+
+                <div class="app-card" onclick="openApp('DPI600_Profile_Manager.html')">
+                    <span class="app-badge badge-new">NEW</span>
+                    <div class="app-icon">🆔</div>
+                    <h3 class="app-title">Profile Manager</h3>
+                    <p class="app-desc">จัดการ Drug Pill Profiles ทั้งหมด - ดู แก้ไข เชื่อมคดี Export รายงาน</p>
+                </div>
+
+                <div class="app-card" onclick="openApp('DPI600_Case_History_Timeline.html')">
+                    <div class="app-icon">📅</div>
+                    <h3 class="app-title">Case History & Timeline</h3>
+                    <p class="app-desc">ประวัติคดีและไทม์ไลน์กิจกรรมทั้งหมด - Filter, Stats, Map, Charts</p>
+                </div>
+
+                <div class="app-card" onclick="openApp('DPI600_Case_Detail.html')">
+                    <div class="app-icon">📋</div>
+                    <h3 class="app-title">Case Detail View</h3>
+                    <p class="app-desc">ดูรายละเอียดคดี - หลักฐาน สารเคมี Organization Match Timeline</p>
+                </div>
+
+                <div class="app-card" onclick="openApp('DPI600_PDF_Report_Template.html')">
+                    <div class="app-icon">📄</div>
+                    <h3 class="app-title">PDF Report Generator</h3>
+                    <p class="app-desc">สร้างรายงาน PDF สำหรับพิมพ์ - Print-Ready พร้อมลายเซ็น</p>
+                </div>
+            </div>
+
+            <!-- Documents & Resources -->
+            <div class="section-title">📁 DOCUMENTS & RESOURCES</div>
+            <div class="app-grid">
+                <div class="app-card" onclick="openApp('DPI600_Executive_Presentation_v2.html')">
+                    <div class="app-icon">📊</div>
+                    <h3 class="app-title">Executive Presentation</h3>
+                    <p class="app-desc">นำเสนอผู้บริหาร - Architecture, UI Wireframes, Roadmap, Cost Breakdown</p>
+                </div>
+
+                <div class="app-card" onclick="openApp('DPI600_Quotation_Interactive.html')">
+                    <div class="app-icon">💰</div>
+                    <h3 class="app-title">Project Quotation</h3>
+                    <p class="app-desc">ใบเสนอราคาโครงการ - รายละเอียดงบประมาณ 8,059,240 บาท</p>
+                </div>
+            </div>
+
+            <!-- Quick Links -->
+            <div class="section-title">⚡ QUICK LINKS</div>
+            <div class="quick-links">
+                <a href="DPI600_Investigation_Center.html" class="quick-link">🔍 New Case Analysis</a>
+                <a href="DPI600_Pill_Fingerprint_Matching.html" class="quick-link">🔬 Pill Comparison</a>
+                <a href="DPI600_Profile_Manager.html" class="quick-link">🆔 View Profiles</a>
+                <a href="DPI600_Case_History_Timeline.html" class="quick-link">📅 Case Timeline</a>
+                <a href="DPI600_PDF_Report_Template.html" class="quick-link">📄 Generate Report</a>
+                <a href="#" class="quick-link" onclick="showDBInfo()">🗄️ Database Schema</a>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>© 2025 DPI-600 Drug Profile Intelligence System</p>
+            <p>Developed by <a href="#">Saengvith Science Co., Ltd.</a></p>
+            <div class="footer-contact">
+                📱 <a href="tel:0850709938">085-070-9938</a> | 
+                💬 LINE: <a href="#">boy_saiyat</a> | 
+                👤 Autthapol Saiyat (Boy) - Technology & AI Program Director
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Login Handler
+        function handleLogin(e) {
+            e.preventDefault();
+            const user = document.getElementById('username').value.trim();
+            const pass = document.getElementById('password').value.trim();
+            
+            if (user === 'admin' && pass === 'admin123') {
+                document.getElementById('loginOverlay').classList.add('hidden');
+                setTimeout(() => {
+                    document.getElementById('mainContent').classList.add('visible');
+                }, 500);
+                localStorage.setItem('dpi600-logged', 'true');
+            } else {
+                document.getElementById('errorMsg').style.display = 'block';
+                setTimeout(() => {
+                    document.getElementById('errorMsg').style.display = 'none';
+                }, 3000);
+            }
+            return false;
+        }
+
+        // Open App
+        function openApp(url) {
+            window.location.href = url;
+        }
+
+        // Theme Toggle
+        function toggleTheme() {
+            const html = document.documentElement;
+            const newTheme = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            document.getElementById('themeIcon').textContent = newTheme === 'light' ? '☀️' : '🌙';
+            localStorage.setItem('dpi600-theme', newTheme);
+        }
+
+        // Show DB Info
+        function showDBInfo() {
+            alert('📁 Database Schema Files:\n\n• DPI600_Database_Schema_v2.sql\n• DPI600_Pill_Profile_Schema.sql\n\nTotal: 15+ Tables, 5+ Views, 8+ Functions');
+        }
+
+        // Particles
+        const particles = document.getElementById('particles');
+        for (let i = 0; i < 25; i++) {
+            const p = document.createElement('div');
+            p.className = 'particle';
+            p.style.left = Math.random() * 100 + '%';
+            p.style.animationDelay = Math.random() * 15 + 's';
+            p.style.animationDuration = (10 + Math.random() * 10) + 's';
+            particles.appendChild(p);
+        }
+
+        // Check login status
+        if (localStorage.getItem('dpi600-logged') === 'true') {
+            document.getElementById('loginOverlay').classList.add('hidden');
+            document.getElementById('mainContent').classList.add('visible');
+        }
+
+        // Load saved theme
+        const savedTheme = localStorage.getItem('dpi600-theme');
+        if (savedTheme) {
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            document.getElementById('themeIcon').textContent = savedTheme === 'light' ? '☀️' : '🌙';
+        }
+    </script>
 </body>
 </html>
