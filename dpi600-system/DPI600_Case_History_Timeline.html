@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="th" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DPI-600 Case History & Timeline</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --cyan: #00ffff;
+            --magenta: #ff00ff;
+            --purple: #8b5cf6;
+            --green: #00ff88;
+            --orange: #ff6600;
+            --yellow: #ffcc00;
+            --red: #ff4444;
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #050510;
+            --bg-secondary: #0a0a1a;
+            --bg-card: rgba(0, 0, 0, 0.4);
+            --bg-input: rgba(0, 0, 0, 0.5);
+            --text-primary: #ffffff;
+            --text-secondary: rgba(255, 255, 255, 0.7);
+            --text-muted: rgba(255, 255, 255, 0.5);
+            --border-color: rgba(0, 255, 255, 0.2);
+            --grid-color: rgba(0, 255, 255, 0.03);
+        }
+
+        [data-theme="light"] {
+            --bg-primary: #f0f4f8;
+            --bg-secondary: #ffffff;
+            --bg-card: rgba(255, 255, 255, 0.9);
+            --bg-input: rgba(255, 255, 255, 0.9);
+            --text-primary: #1a1a2e;
+            --text-secondary: rgba(26, 26, 46, 0.8);
+            --text-muted: rgba(26, 26, 46, 0.6);
+            --border-color: rgba(0, 150, 150, 0.3);
+            --grid-color: rgba(0, 100, 100, 0.08);
+            --cyan: #0099aa;
+            --magenta: #cc0088;
+            --green: #00aa66;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            transition: all 0.3s;
+        }
+
+        .bg-grid {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-image: 
+                linear-gradient(var(--grid-color) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+            background-size: 50px 50px;
+            z-index: -1;
+        }
+
+        /* Navigation */
+        .nav {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            background: rgba(5, 5, 16, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border-color);
+            padding: 15px 20px;
+        }
+
+        .nav-inner {
+            max-width: 1600px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .nav-brand {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            color: var(--cyan);
+        }
+
+        .nav-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 8px 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: transparent;
+            color: var(--text-secondary);
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn:hover {
+            border-color: var(--cyan);
+            color: var(--cyan);
+        }
+
+        .btn.active {
+            background: var(--cyan);
+            color: #000;
+            border-color: var(--cyan);
+        }
+
+        .theme-toggle { cursor: pointer; }
+
+        /* Container */
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Page Header */
+        .page-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .page-header h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2rem;
+            background: linear-gradient(135deg, var(--cyan), var(--magenta));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .page-header p {
+            color: var(--text-secondary);
+            margin-top: 8px;
+        }
+
+        /* Filters */
+        .filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 25px;
+            padding: 20px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 15px;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .filter-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .filter-select, .filter-input {
+            padding: 10px 15px;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.95rem;
+            min-width: 150px;
+        }
+
+        .filter-select:focus, .filter-input:focus {
+            outline: none;
+            border-color: var(--cyan);
+        }
+
+        /* Stats Row */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .stat-card:hover {
+            border-color: var(--cyan);
+            transform: translateY(-3px);
+        }
+
+        .stat-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2rem;
+            color: var(--cyan);
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-top: 5px;
+        }
+
+        /* Main Layout */
+        .main-layout {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 25px;
+        }
+
+        @media (max-width: 1000px) {
+            .main-layout { grid-template-columns: 1fr; }
+        }
+
+        /* Timeline Panel */
+        .timeline-panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 15px;
+            padding: 20px;
+            max-height: 800px;
+            overflow-y: auto;
+        }
+
+        .timeline-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1rem;
+            color: var(--cyan);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .timeline {
+            position: relative;
+            padding-left: 30px;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 10px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(180deg, var(--cyan), var(--magenta), var(--purple));
+        }
+
+        .timeline-item {
+            position: relative;
+            padding: 15px;
+            margin-bottom: 15px;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .timeline-item:hover {
+            border-color: var(--cyan);
+            transform: translateX(5px);
+        }
+
+        .timeline-item.selected {
+            border-color: var(--cyan);
+            background: rgba(0, 255, 255, 0.1);
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -24px;
+            top: 20px;
+            width: 12px;
+            height: 12px;
+            background: var(--bg-secondary);
+            border: 3px solid var(--cyan);
+            border-radius: 50%;
+        }
+
+        .timeline-item.seizure::before { border-color: var(--red); background: var(--red); }
+        .timeline-item.analysis::before { border-color: var(--purple); background: var(--purple); }
+        .timeline-item.match::before { border-color: var(--green); background: var(--green); }
+        .timeline-item.verified::before { border-color: var(--yellow); background: var(--yellow); }
+
+        .timeline-date {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 5px;
+        }
+
+        .timeline-case {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.9rem;
+            color: var(--cyan);
+        }
+
+        .timeline-info {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-top: 8px;
+        }
+
+        .timeline-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            margin-top: 8px;
+        }
+
+        .badge-seizure { background: rgba(255, 68, 68, 0.2); color: var(--red); }
+        .badge-analysis { background: rgba(139, 92, 246, 0.2); color: var(--purple); }
+        .badge-match { background: rgba(0, 255, 136, 0.2); color: var(--green); }
+        .badge-verified { background: rgba(255, 204, 0, 0.2); color: var(--yellow); }
+
+        /* Content Panel */
+        .content-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* Card */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 15px;
+            padding: 20px;
+        }
+
+        .card-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1rem;
+            color: var(--cyan);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Map */
+        .map-container {
+            height: 350px;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        #historyMap { height: 100%; width: 100%; }
+
+        /* Chart */
+        .chart-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 800px) {
+            .chart-row { grid-template-columns: 1fr; }
+        }
+
+        .chart-container { height: 250px; }
+
+        /* Case List */
+        .case-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .case-item {
+            display: grid;
+            grid-template-columns: auto 1fr auto auto;
+            gap: 15px;
+            align-items: center;
+            padding: 12px 15px;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .case-item:hover {
+            border-color: var(--cyan);
+            transform: translateX(3px);
+        }
+
+        .case-logo {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--cyan), var(--magenta));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .case-details {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .case-num {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.9rem;
+            color: var(--cyan);
+        }
+
+        .case-meta {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .case-quantity {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.1rem;
+            color: var(--magenta);
+        }
+
+        .case-confidence {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1rem;
+            color: var(--green);
+        }
+
+        /* Organization Stats */
+        .org-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .org-stat-card {
+            padding: 15px;
+            background: var(--bg-input);
+            border-radius: 10px;
+            border-left: 4px solid var(--cyan);
+        }
+
+        .org-stat-card.lion { border-left-color: var(--green); }
+        .org-stat-card.wy { border-left-color: var(--cyan); }
+        .org-stat-card.triple { border-left-color: var(--orange); }
+
+        .org-stat-name {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .org-stat-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+            color: var(--cyan);
+            margin-top: 5px;
+        }
+
+        .org-stat-detail {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 5px;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 25px;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-top: 40px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .footer a { color: var(--cyan); text-decoration: none; }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-secondary); }
+        ::-webkit-scrollbar-thumb { 
+            background: var(--border-color); 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover { background: var(--cyan); }
+    </style>
+</head>
+<body>
+    <div class="bg-grid"></div>
+
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="nav-inner">
+            <div class="nav-brand">🔬 DPI-600 Case History</div>
+            <div class="nav-controls">
+                <button class="btn active" data-view="timeline">📅 Timeline</button>
+                <button class="btn" data-view="list">📋 List View</button>
+                <button class="btn" data-view="map">🗺️ Map View</button>
+                <div class="btn theme-toggle" onclick="toggleTheme()">
+                    <span id="themeIcon">🌙</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1>📊 CASE HISTORY & TIMELINE</h1>
+            <p>ประวัติคดีและไทม์ไลน์กิจกรรมทั้งหมดในระบบ DPI-600</p>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters">
+            <div class="filter-group">
+                <span class="filter-label">📅 Date Range</span>
+                <input type="date" class="filter-input" id="dateFrom" value="2568-01-01">
+            </div>
+            <div class="filter-group">
+                <span class="filter-label">To</span>
+                <input type="date" class="filter-input" id="dateTo" value="2568-12-31">
+            </div>
+            <div class="filter-group">
+                <span class="filter-label">📍 Region</span>
+                <select class="filter-select" id="regionFilter">
+                    <option value="">All Regions</option>
+                    <option value="north">ภาคเหนือ</option>
+                    <option value="northeast">ภาคอีสาน</option>
+                    <option value="central">ภาคกลาง</option>
+                    <option value="west">ภาคตะวันตก</option>
+                    <option value="south">ภาคใต้</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <span class="filter-label">🏷️ Logo</span>
+                <select class="filter-select" id="logoFilter">
+                    <option value="">All Logos</option>
+                    <option value="lion">🦁 Lion</option>
+                    <option value="wy">🔤 WY</option>
+                    <option value="999">9️⃣ 999</option>
+                    <option value="horse">🐴 Horse</option>
+                    <option value="star">⭐ Star</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <span class="filter-label">🎯 Organization</span>
+                <select class="filter-select" id="orgFilter">
+                    <option value="">All Organizations</option>
+                    <option value="1">กลุ่มสิงโตทอง</option>
+                    <option value="2">WY International</option>
+                    <option value="3">ชายแดนใต้</option>
+                    <option value="4">ม้าเหล็ก</option>
+                </select>
+            </div>
+            <div class="filter-group" style="margin-left: auto;">
+                <span class="filter-label">&nbsp;</span>
+                <button class="btn" onclick="applyFilters()">🔍 Apply Filters</button>
+            </div>
+        </div>
+
+        <!-- Stats Row -->
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="stat-value" id="totalCases">127</div>
+                <div class="stat-label">Total Cases (2568)</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="totalPills">4.2M</div>
+                <div class="stat-label">Total Pills Seized</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="avgConfidence">89.3%</div>
+                <div class="stat-label">Avg AI Confidence</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="topOrg">สิงโตทอง</div>
+                <div class="stat-label">Top Organization</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="topRegion">ภาคเหนือ</div>
+                <div class="stat-label">Highest Activity</div>
+            </div>
+        </div>
+
+        <!-- Main Layout -->
+        <div class="main-layout">
+            <!-- Timeline Panel -->
+            <div class="timeline-panel">
+                <div class="timeline-title">📅 Activity Timeline</div>
+                <div class="timeline" id="timelineList">
+                    <!-- Timeline items will be inserted here -->
+                </div>
+            </div>
+
+            <!-- Content Panel -->
+            <div class="content-panel">
+                <!-- Map -->
+                <div class="card">
+                    <div class="card-title">🗺️ Geographic Distribution</div>
+                    <div class="map-container">
+                        <div id="historyMap"></div>
+                    </div>
+                </div>
+
+                <!-- Charts -->
+                <div class="chart-row">
+                    <div class="card">
+                        <div class="card-title">📈 Monthly Trend</div>
+                        <div class="chart-container">
+                            <canvas id="trendChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">🥧 By Organization</div>
+                        <div class="chart-container">
+                            <canvas id="orgChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Organization Stats -->
+                <div class="card">
+                    <div class="card-title">🎯 Organization Statistics</div>
+                    <div class="org-stats">
+                        <div class="org-stat-card lion">
+                            <div class="org-stat-name">🦁 กลุ่มสิงโตทอง</div>
+                            <div class="org-stat-value">47</div>
+                            <div class="org-stat-detail">cases | 2.35M pills</div>
+                        </div>
+                        <div class="org-stat-card wy">
+                            <div class="org-stat-name">🔤 WY International</div>
+                            <div class="org-stat-value">23</div>
+                            <div class="org-stat-detail">cases | 890K pills</div>
+                        </div>
+                        <div class="org-stat-card triple">
+                            <div class="org-stat-name">9️⃣ ชายแดนใต้</div>
+                            <div class="org-stat-value">12</div>
+                            <div class="org-stat-detail">cases | 450K pills</div>
+                        </div>
+                        <div class="org-stat-card">
+                            <div class="org-stat-name">🐴 ม้าเหล็ก</div>
+                            <div class="org-stat-value">18</div>
+                            <div class="org-stat-detail">cases | 620K pills</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Cases -->
+                <div class="card">
+                    <div class="card-title">📋 Recent Cases</div>
+                    <div class="case-list" id="caseList">
+                        <!-- Cases will be inserted here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        © 2025 <a href="#">Autthapol Saiyat (Boy)</a> - Technology & AI Program Director | 
+        📱 085-070-9938 | 💬 LINE: boy_saiyat
+    </footer>
+
+    <script>
+        // Sample Data
+        const timelineData = [
+            { id: 1, date: '2568-12-10', time: '14:30', type: 'seizure', case: 'DPI-2568-000127', info: '📍 เชียงราย | 🦁 Lion | 35,000 เม็ด', logo: '🦁' },
+            { id: 2, date: '2568-12-10', time: '10:15', type: 'verified', case: 'DPI-2568-000125', info: '✅ Verified - สิงโตทอง 94.2%', logo: '🦁' },
+            { id: 3, date: '2568-12-09', time: '16:45', type: 'match', case: 'DPI-2568-000124', info: '🎯 AI Match - WY International 91.5%', logo: '🔤' },
+            { id: 4, date: '2568-12-09', time: '11:00', type: 'analysis', case: 'DPI-2568-000123', info: '🧪 Lab result - Meth 82%', logo: '9️⃣' },
+            { id: 5, date: '2568-12-08', time: '15:20', type: 'seizure', case: 'DPI-2568-000122', info: '📍 นครพนม | 🔤 WY | 28,000 เม็ด', logo: '🔤' },
+            { id: 6, date: '2568-12-08', time: '09:30', type: 'verified', case: 'DPI-2568-000120', info: '✅ Verified - ม้าเหล็ก 88.7%', logo: '🐴' },
+            { id: 7, date: '2568-12-07', time: '17:00', type: 'seizure', case: 'DPI-2568-000119', info: '📍 เชียงใหม่ | 🦁 Lion | 80,000 เม็ด', logo: '🦁' },
+            { id: 8, date: '2568-12-07', time: '12:45', type: 'match', case: 'DPI-2568-000118', info: '🎯 AI Match - สิงโตทอง 96.3%', logo: '🦁' },
+            { id: 9, date: '2568-12-06', time: '14:00', type: 'analysis', case: 'DPI-2568-000117', info: '🧪 Lab result - Meth 79%', logo: '🔤' },
+            { id: 10, date: '2568-12-05', time: '10:30', type: 'seizure', case: 'DPI-2568-000115', info: '📍 กรุงเทพฯ | 9️⃣ 999 | 15,000 เม็ด', logo: '9️⃣' },
+        ];
+
+        const casesData = [
+            { id: 1, case: 'DPI-2568-000127', date: '10 ธ.ค. 68', province: 'เชียงราย', logo: '🦁', quantity: '35,000', confidence: '97.5%' },
+            { id: 2, case: 'DPI-2568-000122', date: '8 ธ.ค. 68', province: 'นครพนม', logo: '🔤', quantity: '28,000', confidence: '91.5%' },
+            { id: 3, case: 'DPI-2568-000119', date: '7 ธ.ค. 68', province: 'เชียงใหม่', logo: '🦁', quantity: '80,000', confidence: '96.3%' },
+            { id: 4, case: 'DPI-2568-000115', date: '5 ธ.ค. 68', province: 'กรุงเทพฯ', logo: '9️⃣', quantity: '15,000', confidence: '88.7%' },
+            { id: 5, case: 'DPI-2568-000110', date: '3 ธ.ค. 68', province: 'มุกดาหาร', logo: '🔤', quantity: '42,000', confidence: '93.2%' },
+        ];
+
+        // Render Timeline
+        function renderTimeline() {
+            const container = document.getElementById('timelineList');
+            container.innerHTML = timelineData.map((item, index) => `
+                <div class="timeline-item ${item.type}" onclick="selectTimelineItem(${index})">
+                    <div class="timeline-date">${item.date} | ${item.time}</div>
+                    <div class="timeline-case">${item.case}</div>
+                    <div class="timeline-info">${item.info}</div>
+                    <span class="timeline-badge badge-${item.type}">
+                        ${item.type === 'seizure' ? '🚔 Seizure' : 
+                          item.type === 'analysis' ? '🧪 Analysis' :
+                          item.type === 'match' ? '🎯 AI Match' : '✅ Verified'}
+                    </span>
+                </div>
+            `).join('');
+        }
+
+        // Render Case List
+        function renderCaseList() {
+            const container = document.getElementById('caseList');
+            container.innerHTML = casesData.map(item => `
+                <div class="case-item" onclick="openCase('${item.case}')">
+                    <div class="case-logo">${item.logo}</div>
+                    <div class="case-details">
+                        <div class="case-num">${item.case}</div>
+                        <div class="case-meta">📅 ${item.date} | 📍 ${item.province}</div>
+                    </div>
+                    <div class="case-quantity">${item.quantity}</div>
+                    <div class="case-confidence">${item.confidence}</div>
+                </div>
+            `).join('');
+        }
+
+        // Initialize Map
+        let map;
+        function initMap() {
+            map = L.map('historyMap').setView([15.87, 100.99], 5);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap'
+            }).addTo(map);
+
+            // Add markers
+            const locations = [
+                { lat: 19.9, lng: 99.8, name: 'เชียงราย', cases: 47, color: '#00ff88' },
+                { lat: 18.8, lng: 98.98, name: 'เชียงใหม่', cases: 23, color: '#00ff88' },
+                { lat: 17.4, lng: 104.78, name: 'นครพนม', cases: 15, color: '#00ffff' },
+                { lat: 16.43, lng: 104.72, name: 'มุกดาหาร', cases: 12, color: '#00ffff' },
+                { lat: 13.75, lng: 100.5, name: 'กรุงเทพฯ', cases: 18, color: '#ff6600' },
+            ];
+
+            locations.forEach(loc => {
+                const size = 15 + (loc.cases / 2);
+                const icon = L.divIcon({
+                    className: 'custom-marker',
+                    html: `<div style="
+                        width: ${size}px;
+                        height: ${size}px;
+                        background: ${loc.color};
+                        border-radius: 50%;
+                        border: 2px solid white;
+                        box-shadow: 0 0 10px ${loc.color};
+                    "></div>`,
+                    iconSize: [size, size]
+                });
+
+                L.marker([loc.lat, loc.lng], { icon })
+                    .addTo(map)
+                    .bindPopup(`<strong>${loc.name}</strong><br>Cases: ${loc.cases}`);
+            });
+        }
+
+        // Initialize Charts
+        let trendChart, orgChart;
+        function initCharts() {
+            // Trend Chart
+            const ctx1 = document.getElementById('trendChart').getContext('2d');
+            trendChart = new Chart(ctx1, {
+                type: 'line',
+                data: {
+                    labels: ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'],
+                    datasets: [{
+                        label: 'Cases',
+                        data: [8, 12, 15, 11, 18, 22, 19, 25, 21, 28, 24, 30],
+                        borderColor: '#00ffff',
+                        backgroundColor: 'rgba(0, 255, 255, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { ticks: { color: '#888' }, grid: { color: 'rgba(255,255,255,0.1)' } },
+                        x: { ticks: { color: '#888' }, grid: { display: false } }
+                    }
+                }
+            });
+
+            // Organization Chart
+            const ctx2 = document.getElementById('orgChart').getContext('2d');
+            orgChart = new Chart(ctx2, {
+                type: 'doughnut',
+                data: {
+                    labels: ['สิงโตทอง', 'WY International', 'ชายแดนใต้', 'ม้าเหล็ก', 'Others'],
+                    datasets: [{
+                        data: [47, 23, 12, 18, 27],
+                        backgroundColor: ['#00ff88', '#00ffff', '#ff6600', '#8b5cf6', '#666']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { color: '#888', padding: 10 }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Theme Toggle
+        function toggleTheme() {
+            const html = document.documentElement;
+            const newTheme = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            document.getElementById('themeIcon').textContent = newTheme === 'light' ? '☀️' : '🌙';
+            localStorage.setItem('dpi600-theme', newTheme);
+        }
+
+        // Select Timeline Item
+        function selectTimelineItem(index) {
+            document.querySelectorAll('.timeline-item').forEach((el, i) => {
+                el.classList.toggle('selected', i === index);
+            });
+        }
+
+        // Open Case
+        function openCase(caseNum) {
+            alert(`Opening case: ${caseNum}`);
+        }
+
+        // Apply Filters
+        function applyFilters() {
+            alert('Applying filters...');
+        }
+
+        // View Toggle
+        document.querySelectorAll('.nav-controls .btn[data-view]').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.nav-controls .btn[data-view]').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            renderTimeline();
+            renderCaseList();
+            initMap();
+            initCharts();
+
+            // Load saved theme
+            const savedTheme = localStorage.getItem('dpi600-theme');
+            if (savedTheme) {
+                document.documentElement.setAttribute('data-theme', savedTheme);
+                document.getElementById('themeIcon').textContent = savedTheme === 'light' ? '☀️' : '🌙';
+            }
+        });
+    </script>
+</body>
+</html>

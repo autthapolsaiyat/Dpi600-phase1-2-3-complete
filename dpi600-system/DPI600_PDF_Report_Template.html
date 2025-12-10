@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DPI-600 Case Report | PDF Export</title>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        /* Print-optimized styles */
+        @page {
+            size: A4;
+            margin: 15mm;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Sarabun', sans-serif;
+            font-size: 11pt;
+            line-height: 1.5;
+            color: #333;
+            background: white;
+        }
+
+        /* Header */
+        .report-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #0099aa;
+            margin-bottom: 20px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #0099aa, #cc0088);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 14pt;
+            font-weight: 700;
+        }
+
+        .header-title h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 16pt;
+            color: #0099aa;
+        }
+
+        .header-title p {
+            font-size: 10pt;
+            color: #666;
+        }
+
+        .header-right {
+            text-align: right;
+        }
+
+        .case-number {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 14pt;
+            color: #cc0088;
+        }
+
+        .report-date {
+            font-size: 9pt;
+            color: #666;
+        }
+
+        /* Status Badge */
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 9pt;
+            font-weight: 600;
+            margin-top: 5px;
+        }
+
+        .status-open {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffc107;
+        }
+
+        .status-closed {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #28a745;
+        }
+
+        /* Sections */
+        .section {
+            margin-bottom: 20px;
+            page-break-inside: avoid;
+        }
+
+        .section-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 12pt;
+            color: #0099aa;
+            padding: 8px 0;
+            border-bottom: 2px solid #0099aa;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Info Grid */
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .info-box {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 12px;
+        }
+
+        .info-box-title {
+            font-size: 9pt;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .info-box-value {
+            font-size: 11pt;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .info-box-value.highlight {
+            color: #0099aa;
+            font-size: 14pt;
+        }
+
+        /* Table */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 8px 10px;
+            text-align: left;
+            border: 1px solid #dee2e6;
+        }
+
+        .data-table th {
+            background: #0099aa;
+            color: white;
+            font-weight: 600;
+            font-size: 10pt;
+        }
+
+        .data-table td {
+            font-size: 10pt;
+        }
+
+        .data-table tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        /* Chemical Bars */
+        .chem-bar-container {
+            margin-bottom: 10px;
+        }
+
+        .chem-bar-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10pt;
+            margin-bottom: 3px;
+        }
+
+        .chem-bar {
+            height: 15px;
+            background: #e9ecef;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .chem-bar-fill {
+            height: 100%;
+            border-radius: 8px;
+        }
+
+        .chem-bar-fill.meth { background: linear-gradient(90deg, #cc0088, #ff4444); }
+        .chem-bar-fill.caff { background: linear-gradient(90deg, #0099aa, #8b5cf6); }
+        .chem-bar-fill.lact { background: linear-gradient(90deg, #00aa66, #0099aa); }
+        .chem-bar-fill.mdma { background: linear-gradient(90deg, #ff6600, #ffcc00); }
+
+        /* Organization Match Box */
+        .org-box {
+            border: 2px solid #00aa66;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            background: #f0fff4;
+        }
+
+        .org-box.secondary {
+            border-color: #0099aa;
+            background: #f0f9ff;
+        }
+
+        .org-box.tertiary {
+            border-color: #ff6600;
+            background: #fff8f0;
+        }
+
+        .org-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .org-rank {
+            font-size: 18pt;
+        }
+
+        .org-name {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 12pt;
+            color: #00aa66;
+        }
+
+        .org-box.secondary .org-name { color: #0099aa; }
+        .org-box.tertiary .org-name { color: #ff6600; }
+
+        .org-confidence {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 18pt;
+            font-weight: 700;
+        }
+
+        .org-details {
+            font-size: 10pt;
+            color: #666;
+        }
+
+        .match-scores {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .score-item {
+            text-align: center;
+            padding: 8px;
+            background: white;
+            border-radius: 6px;
+        }
+
+        .score-label {
+            font-size: 8pt;
+            color: #666;
+        }
+
+        .score-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 12pt;
+            color: #0099aa;
+        }
+
+        /* Evidence Grid */
+        .evidence-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .evidence-item {
+            aspect-ratio: 1;
+            background: #f0f0f0;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 8pt;
+            color: #666;
+        }
+
+        .evidence-item.primary {
+            border: 2px solid #0099aa;
+        }
+
+        /* Timeline */
+        .timeline {
+            position: relative;
+            padding-left: 25px;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 8px;
+            top: 5px;
+            bottom: 5px;
+            width: 2px;
+            background: #0099aa;
+        }
+
+        .timeline-item {
+            position: relative;
+            padding-bottom: 12px;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -21px;
+            top: 5px;
+            width: 8px;
+            height: 8px;
+            background: #0099aa;
+            border-radius: 50%;
+        }
+
+        .timeline-date {
+            font-size: 9pt;
+            color: #666;
+        }
+
+        .timeline-content {
+            font-size: 10pt;
+        }
+
+        /* Footer */
+        .report-footer {
+            margin-top: 30px;
+            padding-top: 15px;
+            border-top: 2px solid #0099aa;
+            display: flex;
+            justify-content: space-between;
+            font-size: 9pt;
+            color: #666;
+        }
+
+        /* Signature Box */
+        .signature-section {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            margin-top: 40px;
+            page-break-inside: avoid;
+        }
+
+        .signature-box {
+            text-align: center;
+        }
+
+        .signature-line {
+            border-bottom: 1px solid #333;
+            height: 60px;
+            margin-bottom: 5px;
+        }
+
+        .signature-title {
+            font-size: 10pt;
+        }
+
+        .signature-name {
+            font-size: 9pt;
+            color: #666;
+        }
+
+        /* Watermark */
+        .watermark {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            font-size: 100pt;
+            color: rgba(0, 153, 170, 0.05);
+            font-family: 'Orbitron', sans-serif;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        /* Print Button */
+        .print-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #0099aa, #cc0088);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 12pt;
+            cursor: pointer;
+            box-shadow: 0 5px 20px rgba(0, 153, 170, 0.4);
+        }
+
+        .print-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        @media print {
+            .print-btn { display: none; }
+            .watermark { display: block; }
+            body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        }
+
+        @media screen {
+            body { 
+                max-width: 210mm; 
+                margin: 20px auto; 
+                padding: 20mm;
+                box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            }
+        }
+
+        /* QR Code placeholder */
+        .qr-code {
+            width: 80px;
+            height: 80px;
+            background: #f0f0f0;
+            border: 1px solid #ddd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 8pt;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="watermark">DPI-600</div>
+
+    <!-- Header -->
+    <header class="report-header">
+        <div class="header-left">
+            <div class="logo">DPI</div>
+            <div class="header-title">
+                <h1>DPI-600 CASE REPORT</h1>
+                <p>Drug Profile Intelligence System | สำนักงานพิสูจน์หลักฐานตำรวจ</p>
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="case-number">DPI-2568-000001</div>
+            <div class="report-date">Generated: 10 ธันวาคม 2568 | 14:30:25</div>
+            <span class="status-badge status-closed">✓ CLOSED</span>
+        </div>
+    </header>
+
+    <!-- Case Overview -->
+    <section class="section">
+        <h2 class="section-title">📋 CASE OVERVIEW</h2>
+        <div class="info-grid">
+            <div class="info-box">
+                <div class="info-box-title">Case Date</div>
+                <div class="info-box-value">1 ธันวาคม 2568 | 14:30</div>
+            </div>
+            <div class="info-box">
+                <div class="info-box-title">Location</div>
+                <div class="info-box-value">เชียงราย, ภาคเหนือ</div>
+            </div>
+            <div class="info-box">
+                <div class="info-box-title">Drug Type</div>
+                <div class="info-box-value">Methamphetamine (ยาบ้า)</div>
+            </div>
+            <div class="info-box">
+                <div class="info-box-title">Detected Logo</div>
+                <div class="info-box-value">🦁 Lion (สิงโต)</div>
+            </div>
+            <div class="info-box">
+                <div class="info-box-title">Quantity</div>
+                <div class="info-box-value highlight">50,000 เม็ด</div>
+            </div>
+            <div class="info-box">
+                <div class="info-box-title">AI Confidence</div>
+                <div class="info-box-value highlight">97.5%</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Chemical Analysis -->
+    <section class="section">
+        <h2 class="section-title">🧪 CHEMICAL ANALYSIS</h2>
+        <div class="info-grid">
+            <div>
+                <div class="chem-bar-container">
+                    <div class="chem-bar-label">
+                        <span>Methamphetamine</span>
+                        <span><strong>86%</strong></span>
+                    </div>
+                    <div class="chem-bar">
+                        <div class="chem-bar-fill meth" style="width: 86%"></div>
+                    </div>
+                </div>
+                <div class="chem-bar-container">
+                    <div class="chem-bar-label">
+                        <span>Caffeine</span>
+                        <span><strong>38%</strong></span>
+                    </div>
+                    <div class="chem-bar">
+                        <div class="chem-bar-fill caff" style="width: 38%"></div>
+                    </div>
+                </div>
+                <div class="chem-bar-container">
+                    <div class="chem-bar-label">
+                        <span>Lactose</span>
+                        <span><strong>21%</strong></span>
+                    </div>
+                    <div class="chem-bar">
+                        <div class="chem-bar-fill lact" style="width: 21%"></div>
+                    </div>
+                </div>
+                <div class="chem-bar-container">
+                    <div class="chem-bar-label">
+                        <span>MDMA</span>
+                        <span><strong>4%</strong></span>
+                    </div>
+                    <div class="chem-bar">
+                        <div class="chem-bar-fill mdma" style="width: 4%"></div>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <table class="data-table">
+                    <tr>
+                        <th>Lab Reference</th>
+                        <td>LAB-2568-CR-0512</td>
+                    </tr>
+                    <tr>
+                        <th>Analysis Date</th>
+                        <td>3 ธันวาคม 2568</td>
+                    </tr>
+                    <tr>
+                        <th>Forensic Center</th>
+                        <td>ศูนย์พิสูจน์หลักฐาน 3</td>
+                    </tr>
+                    <tr>
+                        <th>Analyst</th>
+                        <td>ดร.วิทยา เคมีสาร</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- Organization Matches -->
+    <section class="section">
+        <h2 class="section-title">🎯 ORGANIZATION MATCHES (AI ANALYSIS)</h2>
+        
+        <div class="org-box">
+            <div class="org-header">
+                <div>
+                    <span class="org-rank">🥇</span>
+                    <span class="org-name">กลุ่มเครือข่าย "สิงโตทอง"</span>
+                </div>
+                <div class="org-confidence" style="color: #00aa66;">95.5%</div>
+            </div>
+            <div class="org-details">
+                📍 ภาคเหนือ (เชียงราย, เชียงใหม่, แม่ฮ่องสอน) | 
+                📋 Related Cases: 47 | 
+                ⚠️ Threat Level: HIGH
+            </div>
+            <div class="match-scores">
+                <div class="score-item">
+                    <div class="score-label">📷 Logo Match</div>
+                    <div class="score-value">97.5%</div>
+                </div>
+                <div class="score-item">
+                    <div class="score-label">🧪 Chemical Match</div>
+                    <div class="score-value">94.2%</div>
+                </div>
+                <div class="score-item">
+                    <div class="score-label">📍 Geo Match</div>
+                    <div class="score-value">95.0%</div>
+                </div>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+            <div class="org-box secondary">
+                <div class="org-header">
+                    <div>
+                        <span class="org-rank">🥈</span>
+                        <span class="org-name">กลุ่มเครือข่าย "WY International"</span>
+                    </div>
+                    <div class="org-confidence" style="color: #0099aa;">48.8%</div>
+                </div>
+                <div class="org-details">📍 ภาคอีสาน | Cases: 23</div>
+            </div>
+            <div class="org-box tertiary">
+                <div class="org-header">
+                    <div>
+                        <span class="org-rank">🥉</span>
+                        <span class="org-name">กลุ่มเครือข่าย "ม้าเหล็ก"</span>
+                    </div>
+                    <div class="org-confidence" style="color: #ff6600;">42.3%</div>
+                </div>
+                <div class="org-details">📍 ภาคตะวันตก | Cases: 18</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Case Details Table -->
+    <section class="section">
+        <h2 class="section-title">📊 CASE DETAILS</h2>
+        <table class="data-table">
+            <tr>
+                <th width="30%">Field</th>
+                <th>Value</th>
+            </tr>
+            <tr>
+                <td>Case Number</td>
+                <td><strong>DPI-2568-000001</strong></td>
+            </tr>
+            <tr>
+                <td>F-NET Reference</td>
+                <td>FNET-2568-12345</td>
+            </tr>
+            <tr>
+                <td>Seizure Location</td>
+                <td>ด่านตรวจแม่สาย, อ.แม่สาย, จ.เชียงราย</td>
+            </tr>
+            <tr>
+                <td>GPS Coordinates</td>
+                <td>20.4280°N, 99.8766°E</td>
+            </tr>
+            <tr>
+                <td>Quantity (Pills)</td>
+                <td>50,000 เม็ด</td>
+            </tr>
+            <tr>
+                <td>Weight</td>
+                <td>4.5 กก.</td>
+            </tr>
+            <tr>
+                <td>Estimated Value</td>
+                <td>฿5,000,000</td>
+            </tr>
+            <tr>
+                <td>Suspects Arrested</td>
+                <td>2 คน</td>
+            </tr>
+            <tr>
+                <td>Investigating Unit</td>
+                <td>ตำรวจภูธรจังหวัดเชียงราย</td>
+            </tr>
+            <tr>
+                <td>Lead Officer</td>
+                <td>พ.ต.ท.สมชาย รักดี</td>
+            </tr>
+        </table>
+    </section>
+
+    <!-- Evidence -->
+    <section class="section">
+        <h2 class="section-title">📷 EVIDENCE DOCUMENTATION</h2>
+        <div class="evidence-grid">
+            <div class="evidence-item primary">Primary<br>Drug Sample</div>
+            <div class="evidence-item">Scene Photo 1</div>
+            <div class="evidence-item">Scene Photo 2</div>
+            <div class="evidence-item">Packaging</div>
+        </div>
+        <p style="margin-top: 10px; font-size: 9pt; color: #666;">
+            * Full resolution images available in case file: /evidence/DPI-2568-000001/
+        </p>
+    </section>
+
+    <!-- Timeline -->
+    <section class="section">
+        <h2 class="section-title">📅 CASE TIMELINE</h2>
+        <div class="timeline">
+            <div class="timeline-item">
+                <div class="timeline-date">1 ธ.ค. 2568 - 14:30</div>
+                <div class="timeline-content">🚔 ยึดของกลางที่ด่านตรวจ อ.แม่สาย จ.เชียงราย</div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-date">1 ธ.ค. 2568 - 16:00</div>
+                <div class="timeline-content">📷 บันทึกภาพหลักฐานและข้อมูล GPS</div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-date">2 ธ.ค. 2568 - 09:00</div>
+                <div class="timeline-content">🧪 ส่งตัวอย่างตรวจสารเคมีที่ศูนย์พิสูจน์หลักฐาน 3</div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-date">3 ธ.ค. 2568 - 14:00</div>
+                <div class="timeline-content">📊 ได้รับผลวิเคราะห์ทางเคมี - Methamphetamine 86%</div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-date">3 ธ.ค. 2568 - 15:30</div>
+                <div class="timeline-content">🧠 ระบบ AI วิเคราะห์และจับคู่กลุ่มเครือข่าย</div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-date">5 ธ.ค. 2568 - 10:00</div>
+                <div class="timeline-content">✅ นักวิเคราะห์ยืนยันผลการจับคู่ - Confidence 95.5%</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Signatures -->
+    <section class="section signature-section">
+        <div class="signature-box">
+            <div class="signature-line"></div>
+            <div class="signature-title">ผู้รายงาน</div>
+            <div class="signature-name">พ.ต.ท.สมชาย รักดี</div>
+        </div>
+        <div class="signature-box">
+            <div class="signature-line"></div>
+            <div class="signature-title">ผู้ตรวจสอบ</div>
+            <div class="signature-name">พ.ต.อ.วิชัย ตรวจการณ์</div>
+        </div>
+        <div class="signature-box">
+            <div class="signature-line"></div>
+            <div class="signature-title">ผู้อนุมัติ</div>
+            <div class="signature-name">พล.ต.ต.ประเสริฐ ผู้บังคับ</div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="report-footer">
+        <div>
+            <strong>DPI-600 Drug Profile Intelligence System</strong><br>
+            สำนักงานพิสูจน์หลักฐานตำรวจ | Office of Police Forensic Science
+        </div>
+        <div style="text-align: center;">
+            Report ID: RPT-2568-000001-001<br>
+            Page 1 of 1
+        </div>
+        <div style="text-align: right;">
+            <div class="qr-code">[QR Code]</div>
+        </div>
+    </footer>
+
+    <!-- Print Button -->
+    <button class="print-btn" onclick="window.print()">🖨️ PRINT / SAVE PDF</button>
+</body>
+</html>

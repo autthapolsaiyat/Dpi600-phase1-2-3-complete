@@ -1,0 +1,1219 @@
+<!DOCTYPE html>
+<html lang="th" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DPI-600 Profile Manager | Drug Pill Profiles</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --cyan: #00ffff;
+            --magenta: #ff00ff;
+            --purple: #8b5cf6;
+            --green: #00ff88;
+            --orange: #ff6600;
+            --yellow: #ffcc00;
+            --red: #ff4444;
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #050510;
+            --bg-secondary: #0a0a1a;
+            --bg-card: rgba(0, 0, 0, 0.4);
+            --bg-input: rgba(0, 0, 0, 0.5);
+            --text-primary: #ffffff;
+            --text-secondary: rgba(255, 255, 255, 0.7);
+            --text-muted: rgba(255, 255, 255, 0.5);
+            --border-color: rgba(0, 255, 255, 0.2);
+        }
+
+        [data-theme="light"] {
+            --bg-primary: #f0f4f8;
+            --bg-secondary: #ffffff;
+            --bg-card: rgba(255, 255, 255, 0.9);
+            --bg-input: rgba(255, 255, 255, 0.9);
+            --text-primary: #1a1a2e;
+            --text-secondary: rgba(26, 26, 46, 0.8);
+            --text-muted: rgba(26, 26, 46, 0.6);
+            --border-color: rgba(0, 150, 150, 0.3);
+            --cyan: #0099aa;
+            --magenta: #cc0088;
+            --green: #00aa66;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+
+        .bg-grid {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-image: 
+                linear-gradient(rgba(0,255,255,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0,255,255,0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            z-index: -1;
+        }
+
+        /* Navigation */
+        .nav {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            background: rgba(5, 5, 16, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border-color);
+            padding: 15px 20px;
+        }
+
+        .nav-inner {
+            max-width: 1600px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-brand {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            color: var(--cyan);
+        }
+
+        .nav-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: transparent;
+            color: var(--text-secondary);
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn:hover {
+            border-color: var(--cyan);
+            color: var(--cyan);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--cyan), var(--magenta));
+            border: none;
+            color: #000;
+            font-weight: 600;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header */
+        .page-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .page-header h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2rem;
+            background: linear-gradient(135deg, var(--cyan), var(--magenta));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Stats Row */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        @media (max-width: 1000px) {
+            .stats-row { grid-template-columns: repeat(3, 1fr); }
+        }
+
+        @media (max-width: 600px) {
+            .stats-row { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2rem;
+            color: var(--cyan);
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 5px;
+        }
+
+        /* Filters */
+        .filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 25px;
+            padding: 20px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 15px;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .filter-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .filter-select, .filter-input {
+            padding: 10px 15px;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-family: 'Rajdhani', sans-serif;
+            min-width: 150px;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 10px 15px 10px 40px;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-family: 'Rajdhani', sans-serif;
+        }
+
+        /* View Toggle */
+        .view-toggle {
+            display: flex;
+            gap: 5px;
+            margin-left: auto;
+        }
+
+        .view-btn {
+            padding: 10px 15px;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            cursor: pointer;
+        }
+
+        .view-btn.active {
+            background: var(--cyan);
+            color: #000;
+            border-color: var(--cyan);
+        }
+
+        /* Profile Grid */
+        .profile-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+        }
+
+        /* Profile Card */
+        .profile-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 15px;
+            overflow: hidden;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .profile-card:hover {
+            border-color: var(--cyan);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 255, 255, 0.2);
+        }
+
+        .profile-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 20px;
+            background: linear-gradient(135deg, rgba(0, 255, 255, 0.1), rgba(255, 0, 255, 0.1));
+        }
+
+        .profile-image {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--cyan), var(--magenta));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+        }
+
+        .profile-title {
+            flex: 1;
+        }
+
+        .profile-id {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.9rem;
+            color: var(--cyan);
+        }
+
+        .profile-logo {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.3rem;
+            margin-top: 5px;
+        }
+
+        .profile-org {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 3px;
+        }
+
+        .profile-status {
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.75rem;
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .status-active {
+            background: rgba(0, 255, 136, 0.2);
+            color: var(--green);
+        }
+
+        .status-verified {
+            background: rgba(0, 255, 255, 0.2);
+            color: var(--cyan);
+        }
+
+        .profile-body {
+            padding: 20px;
+        }
+
+        .profile-specs {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .spec-item {
+            text-align: center;
+            padding: 10px;
+            background: var(--bg-input);
+            border-radius: 8px;
+        }
+
+        .spec-label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+
+        .spec-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1rem;
+            color: var(--cyan);
+        }
+
+        .profile-chemical {
+            margin-bottom: 15px;
+        }
+
+        .chem-mini-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 5px;
+        }
+
+        .chem-mini-label {
+            width: 80px;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .chem-mini-track {
+            flex: 1;
+            height: 6px;
+            background: var(--bg-input);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .chem-mini-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--cyan), var(--magenta));
+            border-radius: 3px;
+        }
+
+        .chem-mini-value {
+            width: 35px;
+            font-size: 0.75rem;
+            text-align: right;
+            color: var(--text-secondary);
+        }
+
+        .profile-stats {
+            display: flex;
+            justify-content: space-between;
+            padding-top: 15px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .profile-stat {
+            text-align: center;
+        }
+
+        .profile-stat-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.1rem;
+            color: var(--green);
+        }
+
+        .profile-stat-label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+
+        /* Profile List View */
+        .profile-list {
+            display: none;
+        }
+
+        .profile-list.active {
+            display: block;
+        }
+
+        .profile-grid.hidden {
+            display: none;
+        }
+
+        .list-header {
+            display: grid;
+            grid-template-columns: 50px 200px 100px 120px 100px 100px 120px 80px 1fr;
+            gap: 10px;
+            padding: 12px 15px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 10px 10px 0 0;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .list-row {
+            display: grid;
+            grid-template-columns: 50px 200px 100px 120px 100px 100px 120px 80px 1fr;
+            gap: 10px;
+            padding: 15px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-top: none;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .list-row:last-child {
+            border-radius: 0 0 10px 10px;
+        }
+
+        .list-row:hover {
+            background: rgba(0, 255, 255, 0.05);
+        }
+
+        .list-logo {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--cyan), var(--magenta));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .list-id {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.85rem;
+            color: var(--cyan);
+        }
+
+        .list-org {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .list-num {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--green);
+        }
+
+        .list-badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+        }
+
+        /* Detail Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 100;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 40px 20px;
+            overflow-y: auto;
+        }
+
+        .modal-overlay.visible {
+            display: flex;
+        }
+
+        .modal-content {
+            width: 100%;
+            max-width: 1000px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            overflow: hidden;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 25px;
+            background: linear-gradient(135deg, rgba(0, 255, 255, 0.1), rgba(255, 0, 255, 0.1));
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .modal-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+            color: var(--cyan);
+        }
+
+        .modal-close {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            border-radius: 50%;
+            background: transparent;
+            color: var(--text-secondary);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .modal-close:hover {
+            border-color: var(--red);
+            color: var(--red);
+        }
+
+        .modal-body {
+            padding: 25px;
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 25px;
+        }
+
+        @media (max-width: 800px) {
+            .detail-grid { grid-template-columns: 1fr; }
+        }
+
+        .detail-image {
+            aspect-ratio: 1;
+            background: linear-gradient(135deg, var(--bg-card), var(--bg-input));
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 5rem;
+        }
+
+        .detail-info h3 {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--cyan);
+            margin-bottom: 20px;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .detail-label {
+            color: var(--text-muted);
+        }
+
+        .detail-value {
+            font-weight: 500;
+        }
+
+        /* Map in Modal */
+        .modal-map {
+            height: 250px;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-top: 20px;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 25px;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-top: 40px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .footer a { color: var(--cyan); text-decoration: none; }
+    </style>
+</head>
+<body>
+    <div class="bg-grid"></div>
+
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="nav-inner">
+            <div class="nav-brand">🆔 DPI-600 Profile Manager</div>
+            <div class="nav-controls">
+                <button class="btn" onclick="location.href='DPI600_Pill_Fingerprint_Matching.html'">
+                    ➕ New Match
+                </button>
+                <button class="btn btn-primary" onclick="exportAll()">
+                    📤 Export All
+                </button>
+                <div class="btn" onclick="toggleTheme()">
+                    <span id="themeIcon">🌙</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Header -->
+        <div class="page-header">
+            <h1>🆔 DRUG PILL PROFILE MANAGER</h1>
+            <p>จัดการ Drug Pill Profiles ทั้งหมดในระบบ</p>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="stat-value">42</div>
+                <div class="stat-label">Total Profiles</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">38</div>
+                <div class="stat-label">Verified</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">127</div>
+                <div class="stat-label">Matched Cases</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">4.2M</div>
+                <div class="stat-label">Total Pills</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">5</div>
+                <div class="stat-label">Organizations</div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters">
+            <div class="filter-group search-box">
+                <label class="filter-label">🔍 Search</label>
+                <input type="text" placeholder="Search profile ID, logo, organization..." oninput="filterProfiles()">
+            </div>
+            <div class="filter-group">
+                <label class="filter-label">🏷️ Logo</label>
+                <select class="filter-select" onchange="filterProfiles()">
+                    <option value="">All Logos</option>
+                    <option value="lion">🦁 Lion</option>
+                    <option value="wy">🔤 WY</option>
+                    <option value="999">9️⃣ 999</option>
+                    <option value="horse">🐴 Horse</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label class="filter-label">🎯 Organization</label>
+                <select class="filter-select" onchange="filterProfiles()">
+                    <option value="">All Organizations</option>
+                    <option value="1">สิงโตทอง</option>
+                    <option value="2">WY International</option>
+                    <option value="3">ชายแดนใต้</option>
+                    <option value="4">ม้าเหล็ก</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label class="filter-label">✓ Status</label>
+                <select class="filter-select" onchange="filterProfiles()">
+                    <option value="">All Status</option>
+                    <option value="verified">Verified</option>
+                    <option value="pending">Pending</option>
+                </select>
+            </div>
+            <div class="view-toggle">
+                <button class="view-btn active" onclick="setView('grid')">▦</button>
+                <button class="view-btn" onclick="setView('list')">☰</button>
+            </div>
+        </div>
+
+        <!-- Profile Grid -->
+        <div class="profile-grid" id="profileGrid">
+            <!-- Profile Card 1 -->
+            <div class="profile-card" onclick="openDetail('DPF-2568-0001')">
+                <div class="profile-header">
+                    <div class="profile-image">🦁</div>
+                    <div class="profile-title">
+                        <div class="profile-id">DPF-2568-0001</div>
+                        <div class="profile-logo">Lion (สิงโต)</div>
+                        <div class="profile-org">กลุ่มสิงโตทอง (97.5%)</div>
+                    </div>
+                    <span class="profile-status status-verified">✓ VERIFIED</span>
+                </div>
+                <div class="profile-body">
+                    <div class="profile-specs">
+                        <div class="spec-item">
+                            <div class="spec-label">Diameter</div>
+                            <div class="spec-value">6.2mm</div>
+                        </div>
+                        <div class="spec-item">
+                            <div class="spec-label">Thickness</div>
+                            <div class="spec-value">3.1mm</div>
+                        </div>
+                        <div class="spec-item">
+                            <div class="spec-label">Color</div>
+                            <div class="spec-value" style="display:inline-block;width:20px;height:20px;border-radius:50%;background:#FF6B35;"></div>
+                        </div>
+                    </div>
+                    <div class="profile-chemical">
+                        <div class="chem-mini-bar">
+                            <span class="chem-mini-label">Meth</span>
+                            <div class="chem-mini-track"><div class="chem-mini-fill" style="width:85%"></div></div>
+                            <span class="chem-mini-value">85%</span>
+                        </div>
+                        <div class="chem-mini-bar">
+                            <span class="chem-mini-label">Caffeine</span>
+                            <div class="chem-mini-track"><div class="chem-mini-fill" style="width:40%"></div></div>
+                            <span class="chem-mini-value">40%</span>
+                        </div>
+                    </div>
+                    <div class="profile-stats">
+                        <div class="profile-stat">
+                            <div class="profile-stat-value">47</div>
+                            <div class="profile-stat-label">Cases</div>
+                        </div>
+                        <div class="profile-stat">
+                            <div class="profile-stat-value">2.35M</div>
+                            <div class="profile-stat-label">Pills</div>
+                        </div>
+                        <div class="profile-stat">
+                            <div class="profile-stat-value">ภาคเหนือ</div>
+                            <div class="profile-stat-label">Region</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Profile Card 2 -->
+            <div class="profile-card" onclick="openDetail('DPF-2568-0002')">
+                <div class="profile-header">
+                    <div class="profile-image">🔤</div>
+                    <div class="profile-title">
+                        <div class="profile-id">DPF-2568-0002</div>
+                        <div class="profile-logo">WY (ดับเบิลยูวาย)</div>
+                        <div class="profile-org">WY International (91.5%)</div>
+                    </div>
+                    <span class="profile-status status-verified">✓ VERIFIED</span>
+                </div>
+                <div class="profile-body">
+                    <div class="profile-specs">
+                        <div class="spec-item">
+                            <div class="spec-label">Diameter</div>
+                            <div class="spec-value">5.8mm</div>
+                        </div>
+                        <div class="spec-item">
+                            <div class="spec-label">Thickness</div>
+                            <div class="spec-value">2.9mm</div>
+                        </div>
+                        <div class="spec-item">
+                            <div class="spec-label">Color</div>
+                            <div class="spec-value" style="display:inline-block;width:20px;height:20px;border-radius:50%;background:#44AAFF;"></div>
+                        </div>
+                    </div>
+                    <div class="profile-chemical">
+                        <div class="chem-mini-bar">
+                            <span class="chem-mini-label">Meth</span>
+                            <div class="chem-mini-track"><div class="chem-mini-fill" style="width:78%"></div></div>
+                            <span class="chem-mini-value">78%</span>
+                        </div>
+                        <div class="chem-mini-bar">
+                            <span class="chem-mini-label">Caffeine</span>
+                            <div class="chem-mini-track"><div class="chem-mini-fill" style="width:55%"></div></div>
+                            <span class="chem-mini-value">55%</span>
+                        </div>
+                    </div>
+                    <div class="profile-stats">
+                        <div class="profile-stat">
+                            <div class="profile-stat-value">23</div>
+                            <div class="profile-stat-label">Cases</div>
+                        </div>
+                        <div class="profile-stat">
+                            <div class="profile-stat-value">890K</div>
+                            <div class="profile-stat-label">Pills</div>
+                        </div>
+                        <div class="profile-stat">
+                            <div class="profile-stat-value">ภาคอีสาน</div>
+                            <div class="profile-stat-label">Region</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Profile Card 3 -->
+            <div class="profile-card" onclick="openDetail('DPF-2568-0003')">
+                <div class="profile-header">
+                    <div class="profile-image">9️⃣</div>
+                    <div class="profile-title">
+                        <div class="profile-id">DPF-2568-0003</div>
+                        <div class="profile-logo">999 (สามเก้า)</div>
+                        <div class="profile-org">ชายแดนใต้ (89.2%)</div>
+                    </div>
+                    <span class="profile-status status-verified">✓ VERIFIED</span>
+                </div>
+                <div class="profile-body">
+                    <div class="profile-specs">
+                        <div class="spec-item">
+                            <div class="spec-label">Diameter</div>
+                            <div class="spec-value">6.0mm</div>
+                        </div>
+                        <div class="spec-item">
+                            <div class="spec-label">Thickness</div>
+                            <div class="spec-value">3.2mm</div>
+                        </div>
+                        <div class="spec-item">
+                            <div class="spec-label">Color</div>
+                            <div class="spec-value" style="display:inline-block;width:20px;height:20px;border-radius:50%;background:#FFCC00;"></div>
+                        </div>
+                    </div>
+                    <div class="profile-chemical">
+                        <div class="chem-mini-bar">
+                            <span class="chem-mini-label">Meth</span>
+                            <div class="chem-mini-track"><div class="chem-mini-fill" style="width:70%"></div></div>
+                            <span class="chem-mini-value">70%</span>
+                        </div>
+                        <div class="chem-mini-bar">
+                            <span class="chem-mini-label">Caffeine</span>
+                            <div class="chem-mini-track"><div class="chem-mini-fill" style="width:30%"></div></div>
+                            <span class="chem-mini-value">30%</span>
+                        </div>
+                    </div>
+                    <div class="profile-stats">
+                        <div class="profile-stat">
+                            <div class="profile-stat-value">12</div>
+                            <div class="profile-stat-label">Cases</div>
+                        </div>
+                        <div class="profile-stat">
+                            <div class="profile-stat-value">450K</div>
+                            <div class="profile-stat-label">Pills</div>
+                        </div>
+                        <div class="profile-stat">
+                            <div class="profile-stat-value">ภาคกลาง</div>
+                            <div class="profile-stat-label">Region</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Profile Card 4 -->
+            <div class="profile-card" onclick="openDetail('DPF-2568-0004')">
+                <div class="profile-header">
+                    <div class="profile-image">🐴</div>
+                    <div class="profile-title">
+                        <div class="profile-id">DPF-2568-0004</div>
+                        <div class="profile-logo">Horse (ม้า)</div>
+                        <div class="profile-org">ม้าเหล็ก (88.7%)</div>
+                    </div>
+                    <span class="profile-status status-active">● ACTIVE</span>
+                </div>
+                <div class="profile-body">
+                    <div class="profile-specs">
+                        <div class="spec-item">
+                            <div class="spec-label">Diameter</div>
+                            <div class="spec-value">6.5mm</div>
+                        </div>
+                        <div class="spec-item">
+                            <div class="spec-label">Thickness</div>
+                            <div class="spec-value">3.1mm</div>
+                        </div>
+                        <div class="spec-item">
+                            <div class="spec-label">Color</div>
+                            <div class="spec-value" style="display:inline-block;width:20px;height:20px;border-radius:50%;background:#88FF44;"></div>
+                        </div>
+                    </div>
+                    <div class="profile-chemical">
+                        <div class="chem-mini-bar">
+                            <span class="chem-mini-label">Meth</span>
+                            <div class="chem-mini-track"><div class="chem-mini-fill" style="width:82%"></div></div>
+                            <span class="chem-mini-value">82%</span>
+                        </div>
+                        <div class="chem-mini-bar">
+                            <span class="chem-mini-label">Caffeine</span>
+                            <div class="chem-mini-track"><div class="chem-mini-fill" style="width:35%"></div></div>
+                            <span class="chem-mini-value">35%</span>
+                        </div>
+                    </div>
+                    <div class="profile-stats">
+                        <div class="profile-stat">
+                            <div class="profile-stat-value">18</div>
+                            <div class="profile-stat-label">Cases</div>
+                        </div>
+                        <div class="profile-stat">
+                            <div class="profile-stat-value">620K</div>
+                            <div class="profile-stat-label">Pills</div>
+                        </div>
+                        <div class="profile-stat">
+                            <div class="profile-stat-value">ภาคตะวันตก</div>
+                            <div class="profile-stat-label">Region</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Profile Card 5 - New/Pending -->
+            <div class="profile-card" onclick="openDetail('DPF-2568-0042')">
+                <div class="profile-header">
+                    <div class="profile-image">🦁</div>
+                    <div class="profile-title">
+                        <div class="profile-id">DPF-2568-0042</div>
+                        <div class="profile-logo">Lion (สิงโต) - Batch B</div>
+                        <div class="profile-org">สิงโตทอง (95.5%)</div>
+                    </div>
+                    <span class="profile-status" style="background:rgba(255,204,0,0.2);color:var(--yellow);">⏳ PENDING</span>
+                </div>
+                <div class="profile-body">
+                    <div class="profile-specs">
+                        <div class="spec-item">
+                            <div class="spec-label">Diameter</div>
+                            <div class="spec-value">6.2mm</div>
+                        </div>
+                        <div class="spec-item">
+                            <div class="spec-label">Thickness</div>
+                            <div class="spec-value">3.1mm</div>
+                        </div>
+                        <div class="spec-item">
+                            <div class="spec-label">Color</div>
+                            <div class="spec-value" style="display:inline-block;width:20px;height:20px;border-radius:50%;background:#FF6B35;"></div>
+                        </div>
+                    </div>
+                    <div class="profile-chemical">
+                        <div class="chem-mini-bar">
+                            <span class="chem-mini-label">Meth</span>
+                            <div class="chem-mini-track"><div class="chem-mini-fill" style="width:85%"></div></div>
+                            <span class="chem-mini-value">85%</span>
+                        </div>
+                        <div class="chem-mini-bar">
+                            <span class="chem-mini-label">Caffeine</span>
+                            <div class="chem-mini-track"><div class="chem-mini-fill" style="width:42%"></div></div>
+                            <span class="chem-mini-value">42%</span>
+                        </div>
+                    </div>
+                    <div class="profile-stats">
+                        <div class="profile-stat">
+                            <div class="profile-stat-value">12</div>
+                            <div class="profile-stat-label">Cases</div>
+                        </div>
+                        <div class="profile-stat">
+                            <div class="profile-stat-value">485K</div>
+                            <div class="profile-stat-label">Pills</div>
+                        </div>
+                        <div class="profile-stat">
+                            <div class="profile-stat-value">ภาคเหนือ</div>
+                            <div class="profile-stat-label">Region</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profile List View -->
+        <div class="profile-list" id="profileList">
+            <div class="list-header">
+                <span></span>
+                <span>Profile ID</span>
+                <span>Logo</span>
+                <span>Organization</span>
+                <span>Cases</span>
+                <span>Pills</span>
+                <span>Region</span>
+                <span>Status</span>
+                <span>Last Seen</span>
+            </div>
+            <div class="list-row" onclick="openDetail('DPF-2568-0001')">
+                <div class="list-logo">🦁</div>
+                <div>
+                    <div class="list-id">DPF-2568-0001</div>
+                    <div class="list-org">Lion (สิงโต)</div>
+                </div>
+                <span>🦁 Lion</span>
+                <span>สิงโตทอง</span>
+                <span class="list-num">47</span>
+                <span class="list-num">2.35M</span>
+                <span>ภาคเหนือ</span>
+                <span class="list-badge status-verified">✓ Verified</span>
+                <span>1 ธ.ค. 68</span>
+            </div>
+            <div class="list-row" onclick="openDetail('DPF-2568-0002')">
+                <div class="list-logo">🔤</div>
+                <div>
+                    <div class="list-id">DPF-2568-0002</div>
+                    <div class="list-org">WY</div>
+                </div>
+                <span>🔤 WY</span>
+                <span>WY International</span>
+                <span class="list-num">23</span>
+                <span class="list-num">890K</span>
+                <span>ภาคอีสาน</span>
+                <span class="list-badge status-verified">✓ Verified</span>
+                <span>28 พ.ย. 68</span>
+            </div>
+            <div class="list-row" onclick="openDetail('DPF-2568-0003')">
+                <div class="list-logo">9️⃣</div>
+                <div>
+                    <div class="list-id">DPF-2568-0003</div>
+                    <div class="list-org">999</div>
+                </div>
+                <span>9️⃣ 999</span>
+                <span>ชายแดนใต้</span>
+                <span class="list-num">12</span>
+                <span class="list-num">450K</span>
+                <span>ภาคกลาง</span>
+                <span class="list-badge status-verified">✓ Verified</span>
+                <span>15 พ.ย. 68</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detail Modal -->
+    <div class="modal-overlay" id="detailModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modalTitle">DPF-2568-0001</h2>
+                <button class="modal-close" onclick="closeDetail()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="detail-grid">
+                    <div>
+                        <div class="detail-image" id="modalImage">🦁</div>
+                        <div class="modal-map" id="modalMap"></div>
+                    </div>
+                    <div class="detail-info">
+                        <h3>📐 Physical Dimensions</h3>
+                        <div class="detail-row">
+                            <span class="detail-label">Diameter</span>
+                            <span class="detail-value">6.2mm ±0.1mm</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Thickness</span>
+                            <span class="detail-value">3.1mm ±0.05mm</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Shape</span>
+                            <span class="detail-value">Round</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Color</span>
+                            <span class="detail-value">#FF6B35 (Orange)</span>
+                        </div>
+
+                        <h3 style="margin-top:20px;">🧪 Chemical Signature</h3>
+                        <div class="detail-row">
+                            <span class="detail-label">Methamphetamine</span>
+                            <span class="detail-value">85% ±5%</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Caffeine</span>
+                            <span class="detail-value">40% ±5%</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Lactose</span>
+                            <span class="detail-value">20% ±5%</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">MDMA</span>
+                            <span class="detail-value">5% ±5%</span>
+                        </div>
+
+                        <h3 style="margin-top:20px;">🎯 Linked Organization</h3>
+                        <div class="detail-row">
+                            <span class="detail-label">Organization</span>
+                            <span class="detail-value" style="color:var(--green);">กลุ่มสิงโตทอง (97.5%)</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Primary Region</span>
+                            <span class="detail-value">ภาคเหนือ</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Provinces</span>
+                            <span class="detail-value">เชียงราย, เชียงใหม่, แม่ฮ่องสอน</span>
+                        </div>
+
+                        <h3 style="margin-top:20px;">📊 Statistics</h3>
+                        <div class="detail-row">
+                            <span class="detail-label">Total Cases</span>
+                            <span class="detail-value">47 cases</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Total Pills</span>
+                            <span class="detail-value">2,350,000 เม็ด</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">First Seen</span>
+                            <span class="detail-value">15 ม.ค. 2566</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Last Seen</span>
+                            <span class="detail-value">1 ธ.ค. 2568</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-top:25px; display:flex; gap:15px; justify-content:center;">
+                    <button class="btn btn-primary" onclick="viewCases()">📋 View Related Cases</button>
+                    <button class="btn" onclick="exportProfile()">📤 Export Profile</button>
+                    <button class="btn" onclick="editProfile()">✏️ Edit Profile</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        © 2025 <a href="#">Autthapol Saiyat (Boy)</a> - Technology & AI Program Director | 
+        📱 085-070-9938 | 💬 LINE: boy_saiyat
+    </footer>
+
+    <script>
+        let modalMap = null;
+
+        function setView(view) {
+            document.querySelectorAll('.view-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            if (view === 'grid') {
+                document.getElementById('profileGrid').classList.remove('hidden');
+                document.getElementById('profileList').classList.remove('active');
+            } else {
+                document.getElementById('profileGrid').classList.add('hidden');
+                document.getElementById('profileList').classList.add('active');
+            }
+        }
+
+        function openDetail(profileId) {
+            document.getElementById('modalTitle').textContent = profileId;
+            document.getElementById('detailModal').classList.add('visible');
+            
+            // Initialize map
+            setTimeout(() => {
+                if (!modalMap) {
+                    modalMap = L.map('modalMap').setView([19.9, 99.8], 7);
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(modalMap);
+                }
+                modalMap.invalidateSize();
+                
+                // Add markers
+                L.marker([19.9, 99.8]).addTo(modalMap).bindPopup('เชียงราย - 25 cases');
+                L.marker([18.8, 98.98]).addTo(modalMap).bindPopup('เชียงใหม่ - 15 cases');
+                L.marker([19.3, 97.97]).addTo(modalMap).bindPopup('แม่ฮ่องสอน - 7 cases');
+            }, 100);
+        }
+
+        function closeDetail() {
+            document.getElementById('detailModal').classList.remove('visible');
+        }
+
+        function filterProfiles() {
+            // Implement filtering
+        }
+
+        function exportAll() {
+            alert('📤 Exporting all 42 profiles...');
+        }
+
+        function viewCases() {
+            alert('📋 Opening related cases...');
+        }
+
+        function exportProfile() {
+            alert('📤 Exporting profile...');
+        }
+
+        function editProfile() {
+            alert('✏️ Opening profile editor...');
+        }
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            const newTheme = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            document.getElementById('themeIcon').textContent = newTheme === 'light' ? '☀️' : '🌙';
+        }
+
+        // Close modal on click outside
+        document.getElementById('detailModal').addEventListener('click', function(e) {
+            if (e.target === this) closeDetail();
+        });
+    </script>
+</body>
+</html>
