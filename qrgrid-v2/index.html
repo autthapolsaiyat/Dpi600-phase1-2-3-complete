@@ -1,0 +1,1453 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0a0a0f">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>DPI-600 QRGrid v2 | Drug Profile AI</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💊</text></svg>">
+    
+    <!-- jsQR Library for QR Code scanning -->
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #00f5ff;
+            --secondary: #a855f7;
+            --success: #00ff88;
+            --warning: #ffaa00;
+            --danger: #ff4466;
+            --bg-dark: #0a0a0f;
+            --bg-card: rgba(15, 15, 25, 0.95);
+            --text: #ffffff;
+            --text-dim: #888;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Header */
+        .header {
+            background: var(--bg-card);
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(0, 245, 255, 0.2);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .logo-text h1 {
+            font-size: 16px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .logo-text span {
+            font-size: 11px;
+            color: var(--text-dim);
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid var(--success);
+            border-radius: 20px;
+            font-size: 12px;
+            color: var(--success);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--success);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Main Content */
+        .main-content {
+            padding-top: 70px;
+            padding-bottom: 80px;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            background: var(--bg-card);
+            border-bottom: 1px solid rgba(0, 245, 255, 0.1);
+        }
+
+        .tab {
+            flex: 1;
+            padding: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-bottom: 2px solid transparent;
+        }
+
+        .tab.active {
+            border-bottom-color: var(--primary);
+            background: rgba(0, 245, 255, 0.05);
+        }
+
+        .tab-icon {
+            font-size: 20px;
+            margin-bottom: 4px;
+        }
+
+        .tab-label {
+            font-size: 11px;
+            color: var(--text-dim);
+        }
+
+        .tab.active .tab-label {
+            color: var(--primary);
+        }
+
+        /* Tab Content */
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Camera Section */
+        .camera-section {
+            position: relative;
+            background: #000;
+        }
+
+        .camera-container {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 4/3;
+            background: #111;
+            overflow: hidden;
+        }
+
+        #video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        #canvas-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        /* Detection Frame */
+        .detection-frame {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 70%;
+            aspect-ratio: 1;
+            border: 3px dashed var(--warning);
+            border-radius: 12px;
+            transition: all 0.3s;
+        }
+
+        .detection-frame.ready {
+            border-color: var(--success);
+            border-style: solid;
+            box-shadow: 0 0 30px rgba(0, 255, 136, 0.3);
+        }
+
+        .detection-frame.no-qr {
+            border-color: var(--danger);
+        }
+
+        .frame-corner {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border-color: inherit;
+            border-style: solid;
+        }
+
+        .frame-corner.tl { top: -3px; left: -3px; border-width: 3px 0 0 3px; border-radius: 8px 0 0 0; }
+        .frame-corner.tr { top: -3px; right: -3px; border-width: 3px 3px 0 0; border-radius: 0 8px 0 0; }
+        .frame-corner.bl { bottom: -3px; left: -3px; border-width: 0 0 3px 3px; border-radius: 0 0 0 8px; }
+        .frame-corner.br { bottom: -3px; right: -3px; border-width: 0 3px 3px 0; border-radius: 0 0 8px 0; }
+
+        .crosshair {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: var(--primary);
+            font-size: 30px;
+            opacity: 0.7;
+        }
+
+        /* Camera Info Overlay */
+        .camera-info {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #fff;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+        }
+
+        .info-badge {
+            background: rgba(0, 0, 0, 0.6);
+            padding: 4px 8px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* QR Status */
+        .qr-status {
+            position: absolute;
+            bottom: 80px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .qr-status.detected {
+            background: rgba(0, 255, 136, 0.2);
+            border: 1px solid var(--success);
+        }
+
+        .qr-status.searching {
+            background: rgba(255, 170, 0, 0.2);
+            border: 1px solid var(--warning);
+        }
+
+        /* Ready Badge */
+        .ready-badge {
+            position: absolute;
+            bottom: 80px;
+            right: 10px;
+            background: rgba(0, 255, 136, 0.2);
+            border: 1px solid var(--success);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            color: var(--success);
+            display: none;
+        }
+
+        .ready-badge.show {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Capture Button */
+        .capture-section {
+            padding: 16px;
+            background: var(--bg-card);
+        }
+
+        .capture-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border: none;
+            border-radius: 12px;
+            color: var(--bg-dark);
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+
+        .capture-btn:disabled {
+            background: #333;
+            color: #666;
+            cursor: not-allowed;
+        }
+
+        .capture-btn.ready {
+            background: linear-gradient(135deg, var(--success), #00cc6a);
+            animation: glow 1.5s infinite;
+        }
+
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(0, 255, 136, 0.3); }
+            50% { box-shadow: 0 0 40px rgba(0, 255, 136, 0.6); }
+        }
+
+        /* Control Buttons */
+        .controls {
+            display: flex;
+            gap: 12px;
+            padding: 0 16px 16px;
+            background: var(--bg-card);
+        }
+
+        .control-btn {
+            flex: 1;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            color: var(--text);
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .control-btn:hover {
+            background: rgba(0, 245, 255, 0.1);
+            border-color: var(--primary);
+        }
+
+        .control-btn-icon {
+            font-size: 20px;
+            margin-bottom: 4px;
+        }
+
+        .control-btn-label {
+            font-size: 11px;
+            color: var(--text-dim);
+        }
+
+        /* Plate Info Card */
+        .plate-info {
+            margin: 16px;
+            padding: 16px;
+            background: var(--bg-card);
+            border: 1px solid rgba(0, 245, 255, 0.2);
+            border-radius: 12px;
+        }
+
+        .plate-info h3 {
+            font-size: 14px;
+            color: var(--primary);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .plate-details {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .plate-detail {
+            background: rgba(0, 245, 255, 0.05);
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        .plate-detail-label {
+            font-size: 11px;
+            color: var(--text-dim);
+            margin-bottom: 4px;
+        }
+
+        .plate-detail-value {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        /* Gallery */
+        .gallery-section {
+            padding: 16px;
+        }
+
+        .gallery-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .gallery-header h2 {
+            font-size: 18px;
+            color: var(--primary);
+        }
+
+        .gallery-count {
+            background: var(--primary);
+            color: var(--bg-dark);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .gallery-item {
+            aspect-ratio: 1;
+            background: #1a1a2e;
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .gallery-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .gallery-item-badge {
+            position: absolute;
+            bottom: 4px;
+            left: 4px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+        }
+
+        .gallery-empty {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-dim);
+        }
+
+        .gallery-empty-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        /* Settings */
+        .settings-section {
+            padding: 16px;
+        }
+
+        .settings-group {
+            background: var(--bg-card);
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+
+        .settings-group-title {
+            padding: 12px 16px;
+            background: rgba(0, 245, 255, 0.05);
+            font-size: 13px;
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .setting-item {
+            padding: 14px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .setting-item:last-child {
+            border-bottom: none;
+        }
+
+        .setting-label {
+            font-size: 14px;
+        }
+
+        .setting-value {
+            font-size: 13px;
+            color: var(--text-dim);
+        }
+
+        /* Scale Plate Selector */
+        .plate-selector {
+            padding: 16px;
+        }
+
+        .plate-option {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            background: var(--bg-card);
+            border: 2px solid transparent;
+            border-radius: 10px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .plate-option:hover {
+            border-color: rgba(0, 245, 255, 0.3);
+        }
+
+        .plate-option.selected {
+            border-color: var(--primary);
+            background: rgba(0, 245, 255, 0.1);
+        }
+
+        .plate-icon {
+            width: 50px;
+            height: 50px;
+            background: rgba(0, 245, 255, 0.1);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            margin-right: 12px;
+        }
+
+        .plate-info-text h4 {
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .plate-info-text p {
+            font-size: 12px;
+            color: var(--text-dim);
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 200;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .modal.show {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            color: var(--primary);
+        }
+
+        .modal-close {
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            border-radius: 50%;
+            color: #fff;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .modal-image {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 16px;
+        }
+
+        .modal-image img {
+            max-width: 100%;
+            max-height: 50vh;
+            border-radius: 8px;
+        }
+
+        .modal-details {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 16px;
+        }
+
+        .modal-detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .modal-detail-row:last-child {
+            border-bottom: none;
+        }
+
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--bg-card);
+            border: 1px solid var(--success);
+            padding: 12px 24px;
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            opacity: 0;
+            transition: all 0.3s;
+            z-index: 300;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        /* Hidden Canvas for Capture */
+        #capture-canvas {
+            display: none;
+        }
+
+        /* Measurement Overlay */
+        .measurement-overlay {
+            position: absolute;
+            bottom: 130px;
+            left: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 12px;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .measurement-overlay.show {
+            display: block;
+        }
+
+        .measurement-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .measurement-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .measurement-label {
+            color: var(--text-dim);
+            font-size: 12px;
+        }
+
+        .measurement-value {
+            color: var(--primary);
+            font-size: 14px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="logo">
+            <div class="logo-icon">💊</div>
+            <div class="logo-text">
+                <h1>QRGrid Capture v2</h1>
+                <span>DPI-600 Drug Profile AI</span>
+            </div>
+        </div>
+        <div class="status-badge">
+            <div class="status-dot"></div>
+            <span>Online</span>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Tabs -->
+        <nav class="tabs">
+            <div class="tab active" data-tab="capture">
+                <div class="tab-icon">📷</div>
+                <div class="tab-label">ถ่ายภาพ</div>
+            </div>
+            <div class="tab" data-tab="gallery">
+                <div class="tab-icon">🖼️</div>
+                <div class="tab-label">คลังภาพ</div>
+            </div>
+            <div class="tab" data-tab="plates">
+                <div class="tab-icon">📐</div>
+                <div class="tab-label">Scale Plate</div>
+            </div>
+            <div class="tab" data-tab="settings">
+                <div class="tab-icon">⚙️</div>
+                <div class="tab-label">ตั้งค่า</div>
+            </div>
+        </nav>
+
+        <!-- Capture Tab -->
+        <div class="tab-content active" id="capture-tab">
+            <div class="camera-section">
+                <div class="camera-container">
+                    <video id="video" autoplay playsinline></video>
+                    <canvas id="canvas-overlay"></canvas>
+                    
+                    <!-- Detection Frame -->
+                    <div class="detection-frame" id="detection-frame">
+                        <div class="frame-corner tl"></div>
+                        <div class="frame-corner tr"></div>
+                        <div class="frame-corner bl"></div>
+                        <div class="frame-corner br"></div>
+                        <div class="crosshair">+</div>
+                    </div>
+
+                    <!-- Camera Info -->
+                    <div class="camera-info">
+                        <div class="info-badge" id="resolution-badge">
+                            <span>--</span>
+                        </div>
+                        <div class="info-badge" id="gps-badge">
+                            <span>📍 --</span>
+                        </div>
+                    </div>
+
+                    <!-- QR Status -->
+                    <div class="qr-status searching" id="qr-status">
+                        <span>🔍</span>
+                        <span id="qr-status-text">กำลังค้นหา QR Code...</span>
+                    </div>
+
+                    <!-- Ready Badge -->
+                    <div class="ready-badge" id="ready-badge">
+                        <span>●</span>
+                        <span>พร้อมถ่าย</span>
+                    </div>
+
+                    <!-- Measurement Overlay -->
+                    <div class="measurement-overlay" id="measurement-overlay">
+                        <div class="measurement-row">
+                            <span class="measurement-label">Scale Plate:</span>
+                            <span class="measurement-value" id="detected-plate">-</span>
+                        </div>
+                        <div class="measurement-row">
+                            <span class="measurement-label">Grid Size:</span>
+                            <span class="measurement-value" id="detected-scale">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="capture-section">
+                    <button class="capture-btn" id="capture-btn" disabled>
+                        <span>📷</span>
+                        <span>รอตรวจจับ QR Code...</span>
+                    </button>
+                </div>
+
+                <div class="controls">
+                    <button class="control-btn" id="flash-btn">
+                        <div class="control-btn-icon">⚡</div>
+                        <div class="control-btn-label">Flash</div>
+                    </button>
+                    <button class="control-btn" id="switch-btn">
+                        <div class="control-btn-icon">🔄</div>
+                        <div class="control-btn-label">สลับกล้อง</div>
+                    </button>
+                    <button class="control-btn" id="gallery-btn">
+                        <div class="control-btn-icon">🖼️</div>
+                        <div class="control-btn-label">คลังภาพ (<span id="photo-count">0</span>)</div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Current Plate Info -->
+            <div class="plate-info" id="plate-info-card" style="display: none;">
+                <h3>📐 Scale Plate ที่ตรวจพบ</h3>
+                <div class="plate-details">
+                    <div class="plate-detail">
+                        <div class="plate-detail-label">Plate ID</div>
+                        <div class="plate-detail-value" id="plate-id">-</div>
+                    </div>
+                    <div class="plate-detail">
+                        <div class="plate-detail-label">Grid Size</div>
+                        <div class="plate-detail-value" id="plate-scale">-</div>
+                    </div>
+                    <div class="plate-detail">
+                        <div class="plate-detail-label">สำหรับ</div>
+                        <div class="plate-detail-value" id="plate-usage">-</div>
+                    </div>
+                    <div class="plate-detail">
+                        <div class="plate-detail-label">ความละเอียด</div>
+                        <div class="plate-detail-value" id="plate-precision">-</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gallery Tab -->
+        <div class="tab-content" id="gallery-tab">
+            <div class="gallery-section">
+                <div class="gallery-header">
+                    <h2>🖼️ คลังภาพ</h2>
+                    <span class="gallery-count" id="gallery-count">0 ภาพ</span>
+                </div>
+                <div class="gallery-grid" id="gallery-grid">
+                    <!-- Gallery items will be inserted here -->
+                </div>
+                <div class="gallery-empty" id="gallery-empty">
+                    <div class="gallery-empty-icon">📷</div>
+                    <p>ยังไม่มีภาพ</p>
+                    <p style="font-size: 12px; margin-top: 8px;">ถ่ายภาพเม็ดยาบน Scale Plate เพื่อเริ่มต้น</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scale Plates Tab -->
+        <div class="tab-content" id="plates-tab">
+            <div class="plate-selector">
+                <h2 style="color: var(--primary); margin-bottom: 16px;">📐 Scale Plate Database</h2>
+                <p style="color: var(--text-dim); font-size: 13px; margin-bottom: 20px;">
+                    เลือก Scale Plate ที่จะใช้งาน หรือระบบจะตรวจจับอัตโนมัติจาก QR Code
+                </p>
+                
+                <div id="plate-options">
+                    <!-- Plate options will be inserted here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Tab -->
+        <div class="tab-content" id="settings-tab">
+            <div class="settings-section">
+                <div class="settings-group">
+                    <div class="settings-group-title">📷 กล้อง</div>
+                    <div class="setting-item">
+                        <span class="setting-label">ความละเอียด</span>
+                        <span class="setting-value" id="setting-resolution">1920x1080</span>
+                    </div>
+                    <div class="setting-item">
+                        <span class="setting-label">กล้องที่ใช้</span>
+                        <span class="setting-value" id="setting-camera">หลัง</span>
+                    </div>
+                </div>
+
+                <div class="settings-group">
+                    <div class="settings-group-title">📍 ตำแหน่ง</div>
+                    <div class="setting-item">
+                        <span class="setting-label">GPS</span>
+                        <span class="setting-value" id="setting-gps">รอข้อมูล...</span>
+                    </div>
+                    <div class="setting-item">
+                        <span class="setting-label">ความแม่นยำ</span>
+                        <span class="setting-value" id="setting-accuracy">-</span>
+                    </div>
+                </div>
+
+                <div class="settings-group">
+                    <div class="settings-group-title">👤 เจ้าหน้าที่</div>
+                    <div class="setting-item">
+                        <span class="setting-label">รหัสเจ้าหน้าที่</span>
+                        <span class="setting-value" id="setting-officer">OFF-001</span>
+                    </div>
+                    <div class="setting-item">
+                        <span class="setting-label">หน่วยงาน</span>
+                        <span class="setting-value">พฐ.ตร.</span>
+                    </div>
+                </div>
+
+                <div class="settings-group">
+                    <div class="settings-group-title">💾 ข้อมูล</div>
+                    <div class="setting-item">
+                        <span class="setting-label">ภาพที่บันทึก</span>
+                        <span class="setting-value" id="setting-photos">0 ภาพ</span>
+                    </div>
+                    <div class="setting-item">
+                        <span class="setting-label">รอ Upload</span>
+                        <span class="setting-value" id="setting-pending">0 ภาพ</span>
+                    </div>
+                </div>
+
+                <button style="width: 100%; padding: 14px; background: rgba(255,68,102,0.1); border: 1px solid var(--danger); border-radius: 10px; color: var(--danger); margin-top: 16px; cursor: pointer;" onclick="clearAllData()">
+                    🗑️ ล้างข้อมูลทั้งหมด
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Image Detail Modal -->
+    <div class="modal" id="image-modal">
+        <div class="modal-header">
+            <h3 class="modal-title">📷 รายละเอียดภาพ</h3>
+            <button class="modal-close" onclick="closeModal()">✕</button>
+        </div>
+        <div class="modal-image">
+            <img id="modal-image-src" src="" alt="Captured image">
+        </div>
+        <div class="modal-details" id="modal-details">
+            <!-- Details will be inserted here -->
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast">
+        <span>✅</span>
+        <span id="toast-message">บันทึกภาพสำเร็จ!</span>
+    </div>
+
+    <!-- Hidden Canvas -->
+    <canvas id="capture-canvas"></canvas>
+    <canvas id="qr-canvas" style="display: none;"></canvas>
+
+    <script>
+        // =====================================================
+        // SCALE PLATE DATABASE
+        // =====================================================
+        const SCALE_PLATES = {
+            'DPI600-S01-5MM': {
+                id: 'SCALE-01',
+                name: '5mm Grid',
+                gridSize: 5,
+                unit: 'mm',
+                usage: 'ยาบ้าเม็ดเล็ก',
+                precision: '±0.1mm',
+                color: '#00f5ff'
+            },
+            'DPI600-S02-10MM': {
+                id: 'SCALE-02',
+                name: '10mm Grid',
+                gridSize: 10,
+                unit: 'mm',
+                usage: 'ยาบ้าทั่วไป',
+                precision: '±0.2mm',
+                color: '#00ff88'
+            },
+            'DPI600-S03-20MM': {
+                id: 'SCALE-03',
+                name: '20mm Grid',
+                gridSize: 20,
+                unit: 'mm',
+                usage: 'ไอซ์/ยาเม็ดใหญ่',
+                precision: '±0.5mm',
+                color: '#a855f7'
+            },
+            'DPI600-S04-50MM': {
+                id: 'SCALE-04',
+                name: '50mm Grid',
+                gridSize: 50,
+                unit: 'mm',
+                usage: 'ของกลางขนาดใหญ่',
+                precision: '±1.0mm',
+                color: '#ffaa00'
+            }
+        };
+
+        // =====================================================
+        // APP STATE
+        // =====================================================
+        let state = {
+            stream: null,
+            facingMode: 'environment',
+            flashOn: false,
+            gps: null,
+            detectedQR: null,
+            detectedPlate: null,
+            isReady: false,
+            photos: [],
+            scanning: true
+        };
+
+        // =====================================================
+        // DOM ELEMENTS
+        // =====================================================
+        const video = document.getElementById('video');
+        const captureCanvas = document.getElementById('capture-canvas');
+        const qrCanvas = document.getElementById('qr-canvas');
+        const captureBtn = document.getElementById('capture-btn');
+        const detectionFrame = document.getElementById('detection-frame');
+        const qrStatus = document.getElementById('qr-status');
+        const qrStatusText = document.getElementById('qr-status-text');
+        const readyBadge = document.getElementById('ready-badge');
+        const measurementOverlay = document.getElementById('measurement-overlay');
+        const plateInfoCard = document.getElementById('plate-info-card');
+
+        // =====================================================
+        // INITIALIZE
+        // =====================================================
+        document.addEventListener('DOMContentLoaded', () => {
+            initCamera();
+            initGPS();
+            initTabs();
+            loadPhotos();
+            renderPlateOptions();
+            startQRScanning();
+        });
+
+        // =====================================================
+        // CAMERA
+        // =====================================================
+        async function initCamera() {
+            try {
+                const constraints = {
+                    video: {
+                        facingMode: state.facingMode,
+                        width: { ideal: 1920 },
+                        height: { ideal: 1080 }
+                    }
+                };
+
+                state.stream = await navigator.mediaDevices.getUserMedia(constraints);
+                video.srcObject = state.stream;
+
+                video.onloadedmetadata = () => {
+                    const track = state.stream.getVideoTracks()[0];
+                    const settings = track.getSettings();
+                    document.getElementById('resolution-badge').innerHTML = 
+                        `<span>${settings.width}x${settings.height}</span>`;
+                    document.getElementById('setting-resolution').textContent = 
+                        `${settings.width}x${settings.height}`;
+                };
+            } catch (err) {
+                console.error('Camera error:', err);
+                showToast('❌ ไม่สามารถเข้าถึงกล้องได้');
+            }
+        }
+
+        async function switchCamera() {
+            state.facingMode = state.facingMode === 'environment' ? 'user' : 'environment';
+            if (state.stream) {
+                state.stream.getTracks().forEach(track => track.stop());
+            }
+            await initCamera();
+            document.getElementById('setting-camera').textContent = 
+                state.facingMode === 'environment' ? 'หลัง' : 'หน้า';
+        }
+
+        // =====================================================
+        // QR CODE SCANNING
+        // =====================================================
+        function startQRScanning() {
+            const qrCtx = qrCanvas.getContext('2d');
+            
+            function scanFrame() {
+                if (!state.scanning || video.readyState !== video.HAVE_ENOUGH_DATA) {
+                    requestAnimationFrame(scanFrame);
+                    return;
+                }
+
+                qrCanvas.width = video.videoWidth;
+                qrCanvas.height = video.videoHeight;
+                qrCtx.drawImage(video, 0, 0);
+
+                const imageData = qrCtx.getImageData(0, 0, qrCanvas.width, qrCanvas.height);
+                const code = jsQR(imageData.data, imageData.width, imageData.height, {
+                    inversionAttempts: 'dontInvert'
+                });
+
+                if (code && code.data) {
+                    handleQRDetected(code.data);
+                } else {
+                    handleQRNotFound();
+                }
+
+                requestAnimationFrame(scanFrame);
+            }
+
+            requestAnimationFrame(scanFrame);
+        }
+
+        function handleQRDetected(data) {
+            state.detectedQR = data;
+            
+            // Check if it's a valid Scale Plate QR
+            if (SCALE_PLATES[data]) {
+                state.detectedPlate = SCALE_PLATES[data];
+                state.isReady = true;
+                
+                // Update UI
+                detectionFrame.classList.add('ready');
+                detectionFrame.classList.remove('no-qr');
+                
+                qrStatus.classList.add('detected');
+                qrStatus.classList.remove('searching');
+                qrStatusText.innerHTML = `✅ ${state.detectedPlate.id} (${state.detectedPlate.name})`;
+                
+                readyBadge.classList.add('show');
+                measurementOverlay.classList.add('show');
+                
+                document.getElementById('detected-plate').textContent = state.detectedPlate.id;
+                document.getElementById('detected-scale').textContent = state.detectedPlate.name;
+                
+                // Update plate info card
+                plateInfoCard.style.display = 'block';
+                document.getElementById('plate-id').textContent = state.detectedPlate.id;
+                document.getElementById('plate-scale').textContent = state.detectedPlate.name;
+                document.getElementById('plate-usage').textContent = state.detectedPlate.usage;
+                document.getElementById('plate-precision').textContent = state.detectedPlate.precision;
+                
+                // Enable capture button
+                captureBtn.disabled = false;
+                captureBtn.classList.add('ready');
+                captureBtn.innerHTML = '<span>📷</span><span>ถ่ายภาพ</span>';
+            } else {
+                // Unknown QR code
+                qrStatus.classList.add('detected');
+                qrStatus.classList.remove('searching');
+                qrStatusText.innerHTML = `⚠️ QR ไม่รู้จัก: ${data.substring(0, 20)}...`;
+                state.isReady = false;
+            }
+        }
+
+        function handleQRNotFound() {
+            state.detectedQR = null;
+            state.detectedPlate = null;
+            state.isReady = false;
+            
+            // Update UI
+            detectionFrame.classList.remove('ready');
+            detectionFrame.classList.add('no-qr');
+            
+            qrStatus.classList.remove('detected');
+            qrStatus.classList.add('searching');
+            qrStatusText.innerHTML = '🔍 กำลังค้นหา QR Code...';
+            
+            readyBadge.classList.remove('show');
+            measurementOverlay.classList.remove('show');
+            plateInfoCard.style.display = 'none';
+            
+            // Disable capture button
+            captureBtn.disabled = true;
+            captureBtn.classList.remove('ready');
+            captureBtn.innerHTML = '<span>📷</span><span>รอตรวจจับ QR Code...</span>';
+        }
+
+        // =====================================================
+        // GPS
+        // =====================================================
+        function initGPS() {
+            if ('geolocation' in navigator) {
+                navigator.geolocation.watchPosition(
+                    (position) => {
+                        state.gps = {
+                            lat: position.coords.latitude,
+                            lng: position.coords.longitude,
+                            accuracy: position.coords.accuracy
+                        };
+                        
+                        const gpsText = `${state.gps.lat.toFixed(6)}, ${state.gps.lng.toFixed(6)}`;
+                        document.getElementById('gps-badge').innerHTML = `<span>📍 ${gpsText}</span>`;
+                        document.getElementById('setting-gps').textContent = gpsText;
+                        document.getElementById('setting-accuracy').textContent = 
+                            `±${state.gps.accuracy.toFixed(0)}m`;
+                    },
+                    (error) => {
+                        console.error('GPS error:', error);
+                        document.getElementById('gps-badge').innerHTML = '<span>📍 ไม่พร้อม</span>';
+                    },
+                    { enableHighAccuracy: true }
+                );
+            }
+        }
+
+        // =====================================================
+        // CAPTURE
+        // =====================================================
+        captureBtn.addEventListener('click', capturePhoto);
+
+        function capturePhoto() {
+            if (!state.isReady || !state.detectedPlate) {
+                showToast('❌ กรุณารอให้ตรวจจับ QR Code ก่อน');
+                return;
+            }
+
+            // Flash effect
+            const flash = document.createElement('div');
+            flash.style.cssText = `
+                position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+                background: white; z-index: 1000;
+                animation: flash 0.3s ease-out forwards;
+            `;
+            document.body.appendChild(flash);
+            setTimeout(() => flash.remove(), 300);
+
+            // Capture image
+            captureCanvas.width = video.videoWidth;
+            captureCanvas.height = video.videoHeight;
+            const ctx = captureCanvas.getContext('2d');
+            ctx.drawImage(video, 0, 0);
+
+            // Create photo data
+            const photoData = {
+                id: `IMG-${Date.now()}`,
+                image: captureCanvas.toDataURL('image/jpeg', 0.9),
+                timestamp: new Date().toISOString(),
+                plate: state.detectedPlate,
+                qrCode: state.detectedQR,
+                gps: state.gps ? { ...state.gps } : null,
+                measurements: {
+                    // Placeholder - actual measurement would require image processing
+                    estimatedWidth: null,
+                    estimatedHeight: null,
+                    gridSize: state.detectedPlate.gridSize
+                },
+                metadata: {
+                    resolution: `${video.videoWidth}x${video.videoHeight}`,
+                    officerId: 'OFF-001',
+                    deviceInfo: navigator.userAgent
+                }
+            };
+
+            // Save photo
+            state.photos.unshift(photoData);
+            savePhotos();
+            updatePhotoCount();
+
+            showToast(`✅ บันทึกภาพ #${state.photos.length} สำเร็จ!`);
+        }
+
+        // =====================================================
+        // STORAGE
+        // =====================================================
+        function savePhotos() {
+            try {
+                localStorage.setItem('qrgrid_photos', JSON.stringify(state.photos));
+            } catch (e) {
+                console.error('Storage error:', e);
+                showToast('⚠️ พื้นที่เก็บข้อมูลเต็ม');
+            }
+        }
+
+        function loadPhotos() {
+            try {
+                const saved = localStorage.getItem('qrgrid_photos');
+                if (saved) {
+                    state.photos = JSON.parse(saved);
+                }
+            } catch (e) {
+                console.error('Load error:', e);
+            }
+            updatePhotoCount();
+            renderGallery();
+        }
+
+        function clearAllData() {
+            if (confirm('ต้องการล้างข้อมูลทั้งหมด?')) {
+                state.photos = [];
+                localStorage.removeItem('qrgrid_photos');
+                updatePhotoCount();
+                renderGallery();
+                showToast('🗑️ ล้างข้อมูลแล้ว');
+            }
+        }
+
+        // =====================================================
+        // GALLERY
+        // =====================================================
+        function renderGallery() {
+            const grid = document.getElementById('gallery-grid');
+            const empty = document.getElementById('gallery-empty');
+            
+            if (state.photos.length === 0) {
+                grid.innerHTML = '';
+                empty.style.display = 'block';
+                return;
+            }
+
+            empty.style.display = 'none';
+            grid.innerHTML = state.photos.map((photo, index) => `
+                <div class="gallery-item" onclick="openPhotoModal(${index})">
+                    <img src="${photo.image}" alt="Photo ${index + 1}">
+                    <div class="gallery-item-badge">${photo.plate.id}</div>
+                </div>
+            `).join('');
+
+            document.getElementById('gallery-count').textContent = `${state.photos.length} ภาพ`;
+        }
+
+        function openPhotoModal(index) {
+            const photo = state.photos[index];
+            const modal = document.getElementById('image-modal');
+            
+            document.getElementById('modal-image-src').src = photo.image;
+            
+            const details = document.getElementById('modal-details');
+            details.innerHTML = `
+                <div class="modal-detail-row">
+                    <span>📅 เวลา</span>
+                    <span>${new Date(photo.timestamp).toLocaleString('th-TH')}</span>
+                </div>
+                <div class="modal-detail-row">
+                    <span>📐 Scale Plate</span>
+                    <span>${photo.plate.id} (${photo.plate.name})</span>
+                </div>
+                <div class="modal-detail-row">
+                    <span>📏 Grid Size</span>
+                    <span>${photo.plate.gridSize}mm</span>
+                </div>
+                <div class="modal-detail-row">
+                    <span>📍 GPS</span>
+                    <span>${photo.gps ? `${photo.gps.lat.toFixed(6)}, ${photo.gps.lng.toFixed(6)}` : 'ไม่มีข้อมูล'}</span>
+                </div>
+                <div class="modal-detail-row">
+                    <span>🔳 QR Code</span>
+                    <span style="font-size: 11px;">${photo.qrCode}</span>
+                </div>
+                <div class="modal-detail-row">
+                    <span>📷 Resolution</span>
+                    <span>${photo.metadata.resolution}</span>
+                </div>
+            `;
+            
+            modal.classList.add('show');
+        }
+
+        function closeModal() {
+            document.getElementById('image-modal').classList.remove('show');
+        }
+
+        // =====================================================
+        // PLATE OPTIONS
+        // =====================================================
+        function renderPlateOptions() {
+            const container = document.getElementById('plate-options');
+            container.innerHTML = Object.entries(SCALE_PLATES).map(([qr, plate]) => `
+                <div class="plate-option" data-qr="${qr}">
+                    <div class="plate-icon" style="color: ${plate.color}">📐</div>
+                    <div class="plate-info-text">
+                        <h4>${plate.id} - ${plate.name}</h4>
+                        <p>Grid: ${plate.gridSize}mm | ${plate.usage} | ${plate.precision}</p>
+                        <p style="font-size: 10px; margin-top: 4px; opacity: 0.6;">QR: ${qr}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // =====================================================
+        // TABS
+        // =====================================================
+        function initTabs() {
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    // Update tab active state
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    
+                    // Show corresponding content
+                    const tabId = tab.dataset.tab;
+                    document.querySelectorAll('.tab-content').forEach(content => {
+                        content.classList.remove('active');
+                    });
+                    document.getElementById(`${tabId}-tab`).classList.add('active');
+                    
+                    // Render gallery when switching to gallery tab
+                    if (tabId === 'gallery') {
+                        renderGallery();
+                    }
+                });
+            });
+        }
+
+        // =====================================================
+        // UI HELPERS
+        // =====================================================
+        function updatePhotoCount() {
+            document.getElementById('photo-count').textContent = state.photos.length;
+            document.getElementById('setting-photos').textContent = `${state.photos.length} ภาพ`;
+            document.getElementById('setting-pending').textContent = `${state.photos.length} ภาพ`;
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-message').textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        // =====================================================
+        // BUTTON HANDLERS
+        // =====================================================
+        document.getElementById('switch-btn').addEventListener('click', switchCamera);
+        document.getElementById('gallery-btn').addEventListener('click', () => {
+            document.querySelector('[data-tab="gallery"]').click();
+        });
+        document.getElementById('flash-btn').addEventListener('click', () => {
+            // Flash toggle would require torch capability
+            showToast('⚡ Flash ยังไม่รองรับบนอุปกรณ์นี้');
+        });
+
+        // Add flash animation CSS
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes flash {
+                0% { opacity: 1; }
+                100% { opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

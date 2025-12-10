@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DPI-600 Scale Plates - Print Template</title>
+    <!-- QR Code Generator Library -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f0f0f0;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .instructions {
+            max-width: 800px;
+            margin: 0 auto 30px;
+            padding: 20px;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .instructions h2 {
+            color: #00a8cc;
+            margin-bottom: 10px;
+        }
+
+        .instructions ul {
+            margin-left: 20px;
+        }
+
+        .instructions li {
+            margin-bottom: 8px;
+        }
+
+        .print-btn {
+            display: block;
+            width: 200px;
+            margin: 20px auto;
+            padding: 15px;
+            background: #00a8cc;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .print-btn:hover {
+            background: #008ba3;
+        }
+
+        .plates-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 30px;
+        }
+
+        .scale-plate {
+            width: 150mm;
+            height: 200mm;
+            background: white;
+            border: 2px solid #333;
+            padding: 10mm;
+            page-break-inside: avoid;
+            position: relative;
+        }
+
+        .plate-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 5mm;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 5mm;
+        }
+
+        .qr-container {
+            width: 30mm;
+            height: 30mm;
+        }
+
+        .qr-container canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        .plate-info {
+            text-align: right;
+        }
+
+        .plate-info h2 {
+            font-size: 14pt;
+            color: #00a8cc;
+            margin-bottom: 2mm;
+        }
+
+        .plate-info p {
+            font-size: 10pt;
+            color: #666;
+            margin-bottom: 1mm;
+        }
+
+        .grid-container {
+            margin: 5mm 0;
+        }
+
+        .grid-label {
+            font-size: 9pt;
+            color: #666;
+            margin-bottom: 2mm;
+        }
+
+        .measurement-grid {
+            display: grid;
+            border: 1px solid #000;
+            width: fit-content;
+        }
+
+        .grid-cell {
+            border: 0.5px solid #000;
+            background: #fff;
+        }
+
+        .capture-zone {
+            margin-top: 10mm;
+            border: 2px dashed #00a8cc;
+            border-radius: 5mm;
+            height: 80mm;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+
+        .capture-zone-text {
+            font-size: 12pt;
+            color: #00a8cc;
+            margin-bottom: 3mm;
+        }
+
+        .capture-zone-sub {
+            font-size: 9pt;
+            color: #999;
+        }
+
+        .plate-footer {
+            position: absolute;
+            bottom: 10mm;
+            left: 10mm;
+            right: 10mm;
+            text-align: center;
+            font-size: 8pt;
+            color: #999;
+            border-top: 1px solid #eee;
+            padding-top: 3mm;
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+
+            h1, .instructions, .print-btn {
+                display: none;
+            }
+
+            .plates-container {
+                display: block;
+            }
+
+            .scale-plate {
+                margin: 0;
+                border: 1px solid #000;
+                page-break-after: always;
+            }
+        }
+
+        /* Grid sizes */
+        .grid-5mm .grid-cell {
+            width: 5mm;
+            height: 5mm;
+        }
+
+        .grid-10mm .grid-cell {
+            width: 10mm;
+            height: 10mm;
+        }
+
+        .grid-20mm .grid-cell {
+            width: 20mm;
+            height: 20mm;
+        }
+
+        .grid-50mm .grid-cell {
+            width: 25mm; /* Scaled down for print */
+            height: 25mm;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔬 DPI-600 Scale Plates</h1>
+
+    <div class="instructions">
+        <h2>📋 คำแนะนำการใช้งาน</h2>
+        <ul>
+            <li><strong>พิมพ์:</strong> กด "พิมพ์ Scale Plates" แล้วเลือก "Actual Size" หรือ 100%</li>
+            <li><strong>กระดาษ:</strong> ใช้กระดาษ A4 หนา 120-200 gsm หรือพลาสติกใส</li>
+            <li><strong>ลามิเนต:</strong> แนะนำให้ลามิเนตเพื่อความทนทานและทำความสะอาดง่าย</li>
+            <li><strong>ตรวจสอบ:</strong> วัดขนาด Grid หลังพิมพ์ให้ตรงกับที่ระบุ</li>
+        </ul>
+        <button class="print-btn" onclick="window.print()">🖨️ พิมพ์ Scale Plates</button>
+    </div>
+
+    <div class="plates-container" id="plates-container">
+        <!-- Plates will be generated here -->
+    </div>
+
+    <script>
+        const plates = [
+            {
+                id: 'SCALE-01',
+                qrCode: 'DPI600-S01-5MM',
+                gridSize: 5,
+                gridClass: 'grid-5mm',
+                gridCols: 10,
+                gridRows: 5,
+                usage: 'ยาบ้าเม็ดเล็ก',
+                precision: '±0.1mm',
+                color: '#00f5ff'
+            },
+            {
+                id: 'SCALE-02',
+                qrCode: 'DPI600-S02-10MM',
+                gridSize: 10,
+                gridClass: 'grid-10mm',
+                gridCols: 5,
+                gridRows: 3,
+                usage: 'ยาบ้าทั่วไป',
+                precision: '±0.2mm',
+                color: '#00ff88'
+            },
+            {
+                id: 'SCALE-03',
+                qrCode: 'DPI600-S03-20MM',
+                gridSize: 20,
+                gridClass: 'grid-20mm',
+                gridCols: 3,
+                gridRows: 2,
+                usage: 'ไอซ์/ยาเม็ดใหญ่',
+                precision: '±0.5mm',
+                color: '#a855f7'
+            },
+            {
+                id: 'SCALE-04',
+                qrCode: 'DPI600-S04-50MM',
+                gridSize: 50,
+                gridClass: 'grid-50mm',
+                gridCols: 2,
+                gridRows: 2,
+                usage: 'ของกลางขนาดใหญ่',
+                precision: '±1.0mm',
+                color: '#ffaa00'
+            }
+        ];
+
+        function generatePlates() {
+            const container = document.getElementById('plates-container');
+            
+            plates.forEach((plate, index) => {
+                const plateEl = document.createElement('div');
+                plateEl.className = 'scale-plate';
+                plateEl.innerHTML = `
+                    <div class="plate-header">
+                        <div class="qr-container">
+                            <canvas id="qr-${index}"></canvas>
+                        </div>
+                        <div class="plate-info">
+                            <h2 style="color: ${plate.color}">${plate.id}</h2>
+                            <p><strong>${plate.gridSize}mm Grid</strong></p>
+                            <p>${plate.usage}</p>
+                            <p>ความละเอียด: ${plate.precision}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="grid-container">
+                        <div class="grid-label">📏 Reference Grid (${plate.gridSize}mm per cell)</div>
+                        <div class="measurement-grid ${plate.gridClass}" style="grid-template-columns: repeat(${plate.gridCols}, 1fr);">
+                            ${Array(plate.gridCols * plate.gridRows).fill('<div class="grid-cell"></div>').join('')}
+                        </div>
+                    </div>
+                    
+                    <div class="capture-zone">
+                        <div class="capture-zone-text">📷 วางเม็ดยาที่นี่</div>
+                        <div class="capture-zone-sub">Place drug sample here</div>
+                    </div>
+                    
+                    <div class="plate-footer">
+                        DPI-600 Drug Profile AI System | ${plate.qrCode} | Saengvith Science Co., Ltd.
+                    </div>
+                `;
+                
+                container.appendChild(plateEl);
+                
+                // Generate QR Code
+                QRCode.toCanvas(document.getElementById(`qr-${index}`), plate.qrCode, {
+                    width: 150,
+                    margin: 1,
+                    color: {
+                        dark: '#000000',
+                        light: '#ffffff'
+                    }
+                });
+            });
+        }
+
+        // Generate plates on load
+        window.onload = generatePlates;
+    </script>
+</body>
+</html>
